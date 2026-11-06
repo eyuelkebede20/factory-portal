@@ -5,7 +5,7 @@ services:
     restart: unless-stopped # comes back after crashes and server reboots
     env_file: .env
     ports:
-      - "80:3010" # http://portal works with no port number
+      - "0.0.0.0:3010:3000"
     volumes:
       - portal-data:/data # keeps the app list across rebuilds
 volumes:
