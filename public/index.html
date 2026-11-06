@@ -912,35 +912,36 @@ function render() {
     return matchesQuery && matchesCat;
   });
 
-  // Group by category
-  const groups = {};
-  filtered.forEach((a) => {
-    const cat = a.category || 'General';
-    (groups[cat] ||= []).push(a);
-  });
-
   const main = $('#list');
   main.replaceChildren();
 
-  const sortedCats = Object.keys(groups).sort();
-  sortedCats.forEach((cat) => {
+  if (activeCategory === 'ALL') {
+    // View all cards in a single unified grid without category grouping
+    const grid = document.createElement('div');
+    grid.className = 'cards-grid';
+    filtered.sort((a, b) => a.name.localeCompare(b.name)).forEach((app) => {
+      grid.appendChild(createCard(app));
+    });
+    main.appendChild(grid);
+  } else {
+    // When a specific category is selected, display under that category section header
     const catGroup = document.createElement('section');
     catGroup.className = 'category-group';
 
     const header = document.createElement('div');
     header.className = 'category-header';
-    header.innerHTML = `<h2>${cat}</h2><span class="category-count">${groups[cat].length}</span>`;
+    header.innerHTML = `<h2>${activeCategory}</h2><span class="category-count">${filtered.length}</span>`;
     catGroup.appendChild(header);
 
     const grid = document.createElement('div');
     grid.className = 'cards-grid';
-    groups[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach((app) => {
+    filtered.sort((a, b) => a.name.localeCompare(b.name)).forEach((app) => {
       grid.appendChild(createCard(app));
     });
 
     catGroup.appendChild(grid);
     main.appendChild(catGroup);
-  });
+  }
 
   // Empty state handling
   const empty = $('#empty');

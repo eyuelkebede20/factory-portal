@@ -15,8 +15,10 @@ public/admin.html         The admin console (/admin) for secure login & app mana
 Dockerfile                node:20-alpine, runs as non-root user "node"
 docker-compose.yml        restart: unless-stopped, port 3010:3000, named volume portal-data
 .env.example              Template for .env (never commit .env)
-startup/open-portal.ps1   Opens the portal once per day per user
-startup/install-startup.ps1  Installs the login shortcut on a PC (run as admin)
+startup/setup-startup.bat    1-click batch installer that configures auto-startup & opens browser
+startup/open-portal.bat      Direct batch launcher that starts the browser pointed to portal
+startup/open-portal.ps1      PowerShell startup runner that verifies connectivity & browser process
+startup/install-startup.ps1  PowerShell installer for Windows startup shortcut
 startup/browser-policy.reg   Sets Home page + Home button in Edge/Chrome
 ```
 
@@ -44,7 +46,8 @@ Changing `.env` needs `docker compose up -d` (recreate) to take effect.
 | GET | `/api/settings` | public | Get startup redirection and download settings |
 | PUT | `/api/settings` | admin | Update startup redirection and download settings |
 | GET | `/api/download/setup-pc` | public | Download 1-click Windows workstation startup installer (.bat) |
-| GET | `/setup.bat` | public | Short alias to download setup script |
+| GET | `/setup.bat`, `/startup.bat`, `/install.bat` | public | Short aliases to download 1-click setup installer (.bat) |
+| GET | `/open.bat`, `/api/download/open-portal` | public | Download direct batch launcher (.bat) pointing to portal |
 | POST | `/api/system/update` | admin | Trigger git pull, docker rebuild and container restart |
 | GET | `/api/system/update-status` | admin | Live terminal log output of running system update |
 | GET | `/admin` | admin | Administrator dashboard UI |
@@ -76,13 +79,17 @@ npm start                   # starts server at http://localhost:3000
 
 ## Client PC auto-startup (one-time per PC)
 Goal: the portal opens by itself when a user signs in at each startup.
-1. Option A, single PC: run as Administrator
-   `powershell -ExecutionPolicy Bypass -File startup\install-startup.ps1 -Url http://portal`
-2. Option B, all PCs (Active Directory): put the `startup` folder on a network share, then in Group Policy go to Computer Configuration > Policies > Windows Settings > Scripts > Startup > PowerShell Scripts and add `install-startup.ps1` with parameter `-Url http://portal`.
-3. Option C, Intune: deploy `install-startup.ps1` as a PowerShell script run as system.
-4. Optional Home button in the browser: import `startup\browser-policy.reg` (or recreate the same values with Group Policy ADMX templates for Edge and Chrome).
+1. **Option A (Simplest - 1-Click .bat)**:
+   - Download or copy `setup.bat` (from `http://portal:3010/setup.bat` or `startup\setup-startup.bat`).
+   - Simply double-click the `.bat` file (or right-click "Run as administrator").
+   - It automatically installs the startup shortcut and immediately opens the default browser pointed to the portal to verify.
+2. **Option B (PowerShell)**:
+   `powershell -ExecutionPolicy Bypass -File startup\install-startup.ps1 -Url http://portal:3010`
+3. **Option C, all PCs (Active Directory)**: put the `startup` folder on a network share, then in Group Policy go to Computer Configuration > Policies > Windows Settings > Scripts > Startup > PowerShell Scripts and add `install-startup.ps1` with parameter `-Url http://portal:3010`.
+4. **Option D, Intune**: deploy `install-startup.ps1` as a PowerShell script run as system.
+5. **Optional Home button in the browser**: import `startup\browser-policy.reg` (or recreate the same values with Group Policy ADMX templates for Edge and Chrome).
 
-How it works: `install-startup.ps1` copies `open-portal.ps1` to `C:\ProgramData\FactoryPortal` and adds a shortcut to the **All Users** Startup folder. At each startup/login the script verifies network/portal connectivity, opens the portal in the default browser, confirms the browser process launched, and records a verified launch log in `%LOCALAPPDATA%\FactoryPortal\startup-launch.log`.
+How it works: `setup-startup.bat` / `install-startup.ps1` copies `open-portal.ps1` to `C:\ProgramData\FactoryPortal` (or `%LOCALAPPDATA%\FactoryPortal`) and adds a shortcut to the Windows Startup folder. At each startup/login the script verifies network/portal connectivity, opens the portal in the default browser, confirms the browser process launched, and records a verified launch log in `%LOCALAPPDATA%\FactoryPortal\startup-launch.log`.
 
 ## Security rules (do not weaken)
 - Admin routes must always go through `requireAdmin`. Never trust the browser to hide buttons.

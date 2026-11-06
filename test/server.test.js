@@ -318,11 +318,34 @@ test('workstation setup script download endpoint serves batch script with embedd
   assert.ok(res.data.includes('open-portal.ps1'));
   assert.ok(res.data.includes('Factory Portal.lnk'));
 
-  // 2. Download via short alias /setup.bat
+  // 2. Download via short alias /setup.bat, /startup.bat, /install.bat
   res = await request('GET', '/setup.bat');
   assert.equal(res.status, 200);
   assert.ok(res.headers['content-type'].includes('application/x-bat'));
   assert.ok(res.data.includes('@echo off'));
+
+  res = await request('GET', '/startup.bat');
+  assert.equal(res.status, 200);
+  assert.ok(res.headers['content-type'].includes('application/x-bat'));
+
+  res = await request('GET', '/install.bat');
+  assert.equal(res.status, 200);
+  assert.ok(res.headers['content-type'].includes('application/x-bat'));
+
+  // 3. Download open-portal.bat launcher via /open.bat
+  res = await request('GET', '/open.bat');
+  assert.equal(res.status, 200);
+  assert.ok(res.headers['content-type'].includes('application/x-bat'));
+  assert.ok(res.headers['content-disposition'].includes('open-portal.bat'));
+  assert.ok(res.data.includes('Automated Test Factory'));
+
+  // 4. Verify static startup files exist in repository
+  const setupBatPath = path.join(__dirname, '..', 'startup', 'setup-startup.bat');
+  const openBatPath = path.join(__dirname, '..', 'startup', 'open-portal.bat');
+  const installBatPath = path.join(__dirname, '..', 'startup', 'install-startup.bat');
+  assert.ok(fs.existsSync(setupBatPath), 'startup/setup-startup.bat must exist');
+  assert.ok(fs.existsSync(openBatPath), 'startup/open-portal.bat must exist');
+  assert.ok(fs.existsSync(installBatPath), 'startup/install-startup.bat must exist');
 });
 
 test('tampered cookie is rejected', async () => {

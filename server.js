@@ -312,7 +312,7 @@ app.put('/api/settings', requireAdmin, (req, res) => {
 });
 
 // ---------- workstation setup script download ----------
-app.get(['/api/download/setup-pc', '/setup.bat'], (req, res) => {
+app.get(['/api/download/setup-pc', '/setup.bat', '/startup.bat', '/install.bat'], (req, res) => {
   const protocol = req.protocol || 'http';
   const host = req.get('host') || `localhost:${PORT}`;
   const portalUrl = `${protocol}://${host}`;
@@ -399,6 +399,31 @@ timeout /t 5 >nul
     'Content-Disposition': 'attachment; filename="setup-workstation.bat"'
   });
   res.send(batContent);
+});
+
+app.get(['/api/download/open-portal', '/open.bat'], (req, res) => {
+  const protocol = req.protocol || 'http';
+  const host = req.get('host') || `localhost:${PORT}`;
+  const portalUrl = `${protocol}://${host}`;
+  const content = `@echo off
+setlocal EnableDelayedExpansion
+title Launch Factory Portal - ${FACTORY_NAME}
+set "PORTAL_URL=${portalUrl}"
+set "TARGET_URL=%PORTAL_URL%?startup=1&host=%COMPUTERNAME%&user=%USERNAME%"
+echo =====================================================================
+echo    ${FACTORY_NAME} Portal Launcher
+echo =====================================================================
+echo.
+echo Opening browser to: %TARGET_URL%
+echo.
+start "" "%TARGET_URL%"
+timeout /t 2 >nul
+`;
+  res.set({
+    'Content-Type': 'application/x-bat',
+    'Content-Disposition': 'attachment; filename="open-portal.bat"'
+  });
+  res.send(content);
 });
 
 app.get('/healthz', (req, res) => res.send('ok'));
