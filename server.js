@@ -99,6 +99,10 @@ app.use((req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 app.get('/api/session', (req, res) => res.json({ admin: isAdmin(req), factory: FACTORY_NAME }));
 app.get('/api/apps', (req, res) => res.json({ apps: load() }));
 

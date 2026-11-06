@@ -12,4 +12,4 @@ $lnk.TargetPath = "powershell.exe"
 $lnk.Arguments = "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$dir\open-portal.ps1`" -Url $Url"
 $lnk.WindowStyle = 7
 $lnk.Save()
-Write-Host "Installed. The portal ($Url) will open once a day at login."
+Write-Host "Installed. The portal ($Url) will always open at startup and confirm browser launch."

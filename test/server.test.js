@@ -71,6 +71,13 @@ test('health check returns 200 ok', async () => {
   assert.equal(res.data, 'ok');
 });
 
+test('admin page is served at /admin', async () => {
+  const res = await request('GET', '/admin');
+  assert.equal(res.status, 200);
+  assert.ok(res.headers['content-type'].includes('text/html'));
+  assert.ok(res.data.includes('Admin Console'));
+});
+
 test('security headers are present on responses', async () => {
   const res = await request('GET', '/api/session');
   assert.equal(res.headers['x-content-type-options'], 'nosniff');

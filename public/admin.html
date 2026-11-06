@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Console | Factory Portal</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<style>
+:root {
+  --bg-dark: #0b1120;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #172554 0%, #0b1120 70%);
+  --surface-card: rgba(17, 24, 39, 0.75);
+  --surface-card-hover: rgba(30, 41, 59, 0.85);
+  --surface-glass: rgba(15, 23, 42, 0.65);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-glass-hover: rgba(96, 165, 250, 0.45);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --brand-blue: #3b82f6;
+  --brand-blue-hover: #2563eb;
+  --brand-glow: rgba(59, 130, 246, 0.25);
+  --safety-amber: #f59e0b;
+  --danger-red: #ef4444;
+  --danger-red-hover: #dc2626;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Ambient glow */
+.bg-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-glow-1 {
+  position: absolute;
+  top: -10%;
+  left: 30%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
+  filter: blur(80px);
+}
+.bg-glow-2 {
+  position: absolute;
+  bottom: 0%;
+  right: 15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+  filter: blur(90px);
+}
+
+.page-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 4vw, 40px) 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Common Buttons */
+button, .btn {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn-primary {
+  background: var(--brand-blue);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--brand-glow);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: #e2e8f0;
+  backdrop-filter: blur(8px);
+}
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #fff;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   LOGIN VIEW
+============================================================ */
+#loginView {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.login-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.login-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.login-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.login-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+.login-header p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.badge-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+.form-error {
+  color: var(--danger-red);
+  font-size: 0.82rem;
+  min-height: 1.3em;
+  display: none;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.login-footer {
+  text-align: center;
+  border-top: 1px solid var(--border-glass);
+  padding-top: 18px;
+}
+.login-footer a {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+.login-footer a:hover {
+  color: #fff;
+}
+
+/* ============================================================
+   DASHBOARD VIEW
+============================================================ */
+#dashboardView {
+  display: none;
+  flex-direction: column;
+  gap: 28px;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-glass);
+}
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header-brand-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.header-brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.header-titles h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-titles p {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Control Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.toolbar-search {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 500px;
+}
+.toolbar-search input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  font-size: 0.9rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: inherit;
+}
+.toolbar-search input:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+.toolbar-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.stats-chip {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-glass);
+}
+
+/* Apps Management Table */
+.table-wrap {
+  background: var(--surface-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+thead tr {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-glass);
+}
+th {
+  padding: 14px 16px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+}
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+.cell-app {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cell-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cell-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  padding: 2px;
+}
+.cell-info b {
+  display: block;
+  font-size: 0.95rem;
+  color: #fff;
+}
+.cell-info span {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.url-tag {
+  display: inline-block;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 0.78rem;
+  color: #93c5fd;
+  text-decoration: none;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.url-tag:hover {
+  text-decoration: underline;
+}
+.cat-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: #e2e8f0;
+}
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modal Dialog */
+dialog {
+  margin: auto;
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  background: #0f172a;
+  color: #fff;
+  padding: 26px 28px;
+  width: min(500px, 92vw);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+}
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+dialog h3 {
+  font-size: 1.25rem;
+  margin-bottom: 18px;
+  color: #fff;
+}
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.empty-row {
+  text-align: center;
+  padding: 36px !important;
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<div class="bg-ambient">
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+</div>
+
+<div class="page-container">
+
+  <!-- ==================== 1. LOGIN VIEW ==================== -->
+  <div id="loginView">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <img src="/logo.png" alt="Portal Logo" onerror="this.src='/icon.png';">
+        </div>
+        <div>
+          <span class="badge-admin">Security Gate</span>
+          <h1 id="loginFactoryTitle">Factory Portal</h1>
+          <p>Sign in to configure portal applications</p>
+        </div>
+      </div>
+
+      <form id="adminLoginForm" class="login-form">
+        <div class="form-group">
+          <label for="adminPw">Administrator Password</label>
+          <input id="adminPw" type="password" class="form-input" autocomplete="current-password" placeholder="Enter password from .env" required autofocus>
+        </div>
+
+        <div id="loginErrorMsg" class="form-error"></div>
+
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+          Sign In as Administrator
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <a href="/">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to Public Portal
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. DASHBOARD VIEW ==================== -->
+  <div id="dashboardView">
+    <header>
+      <div class="header-brand">
+        <div class="header-brand-logo">
+          <img src="/logo.png" alt="Portal Logo" onerror="this.src='/icon.png';">
+        </div>
+        <div class="header-titles">
+          <h1>
+            <span id="dashFactoryTitle">Factory Portal</span>
+            <span class="badge-admin">Admin Console</span>
+          </h1>
+          <p>Application Management & Directory Configuration</p>
+        </div>
+      </div>
+
+      <div class="header-nav">
+        <a href="/" class="btn btn-glass" title="View Public Portal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          View Portal
+        </a>
+        <button id="addAppBtn" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Application
+        </button>
+        <button id="logoutBtn" class="btn btn-glass" title="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Log Out
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input id="adminSearch" type="search" placeholder="Filter apps by name, category, address...">
+      </div>
+      <div class="stats-chip" id="appsCountChip">0 Applications Configured</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Application</th>
+            <th>Category</th>
+            <th>Target Address</th>
+            <th>Description</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appsTableBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add / Edit Dialog -->
+<dialog id="editDialog">
+  <form method="dialog" id="editDialogForm" class="dialog-form">
+    <h3 id="dialogTitle">Add Application</h3>
+    <div class="form-group">
+      <label for="f-name">Application Name *</label>
+      <input id="f-name" class="form-input" maxlength="60" placeholder="e.g. Clinic Records" required>
+    </div>
+    <div class="form-group">
+      <label for="f-url">Target Address (URL) *</label>
+      <input id="f-url" class="form-input" maxlength="300" placeholder="http://192.168.1.50:8080" required>
+    </div>
+    <div class="form-group">
+      <label for="f-cat">Category</label>
+      <input id="f-cat" class="form-input" list="catList" maxlength="40" placeholder="Company, Health, Production...">
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="form-group">
+      <label for="f-icon">Icon URL or Logo Path (optional)</label>
+      <input id="f-icon" class="form-input" maxlength="500" placeholder="/logo.png or http://...">
+    </div>
+    <div class="form-group">
+      <label for="f-desc">Short Description (optional)</label>
+      <input id="f-desc" class="form-input" maxlength="120" placeholder="What this app is for...">
+    </div>
+
+    <div id="dialogErrorMsg" class="form-error"></div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-glass" data-close>Cancel</button>
+      <button type="submit" id="dialogSaveBtn" class="btn btn-primary">Save Application</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let apps = [];
+let editingId = null;
+
+async function api(path, opts = {}) {
+  const r = await fetch('/api/' + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+
+function showLogin() {
+  $('#loginView').style.display = 'flex';
+  $('#dashboardView').style.display = 'none';
+  $('#adminPw').value = '';
+  $('#adminPw').focus();
+}
+
+function showDashboard() {
+  $('#loginView').style.display = 'none';
+  $('#dashboardView').style.display = 'flex';
+  refreshApps();
+}
+
+function renderTable() {
+  const q = $('#adminSearch').value.trim().toLowerCase();
+  const filtered = apps.filter(a => {
+    return !q || [a.name, a.category, a.description, a.url].join(' ').toLowerCase().includes(q);
+  });
+
+  $('#appsCountChip').textContent = `${apps.length} Application${apps.length === 1 ? '' : 's'} Configured`;
+  const tbody = $('#appsTableBody');
+  tbody.replaceChildren();
+
+  if (filtered.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 5;
+    td.className = 'empty-row';
+    td.textContent = apps.length === 0 ? 'No applications configured yet. Click "Add Application" above.' : 'No applications match your filter.';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  filtered.forEach(app => {
+    const tr = document.createElement('tr');
+
+    // App info cell
+    const tdApp = document.createElement('td');
+    const cellApp = document.createElement('div');
+    cellApp.className = 'cell-app';
+
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'cell-icon';
+    if (app.icon) {
+      const img = document.createElement('img');
+      img.src = app.icon;
+      img.alt = app.name;
+      img.onerror = () => {
+        iconDiv.textContent = (app.name || 'A').slice(0, 2).toUpperCase();
+      };
+      iconDiv.appendChild(img);
+    } else {
+      iconDiv.textContent = (app.name || 'A').slice(0, 2).toUpperCase();
+    }
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'cell-info';
+    const bName = document.createElement('b');
+    bName.textContent = app.name;
+    infoDiv.appendChild(bName);
+
+    cellApp.appendChild(iconDiv);
+    cellApp.appendChild(infoDiv);
+    tdApp.appendChild(cellApp);
+    tr.appendChild(tdApp);
+
+    // Category cell
+    const tdCat = document.createElement('td');
+    const catBadge = document.createElement('span');
+    catBadge.className = 'cat-badge';
+    catBadge.textContent = app.category || 'General';
+    tdCat.appendChild(catBadge);
+    tr.appendChild(tdCat);
+
+    // Target URL cell
+    const tdUrl = document.createElement('td');
+    const aUrl = document.createElement('a');
+    aUrl.className = 'url-tag';
+    aUrl.href = app.url;
+    aUrl.target = '_blank';
+    aUrl.rel = 'noopener';
+    aUrl.textContent = app.url;
+    tdUrl.appendChild(aUrl);
+    tr.appendChild(tdUrl);
+
+    // Description cell
+    const tdDesc = document.createElement('td');
+    tdDesc.style.color = 'var(--text-muted)';
+    tdDesc.textContent = app.description || '—';
+    tr.appendChild(tdDesc);
+
+    // Actions cell
+    const tdAct = document.createElement('td');
+    tdAct.style.textAlign = 'right';
+    const actDiv = document.createElement('div');
+    actDiv.className = 'actions-cell';
+    actDiv.style.justifyContent = 'flex-end';
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'btn btn-glass btn-sm';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => openEditDialog(app);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'btn btn-danger btn-sm';
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = async () => {
+      if (confirm(`Are you sure you want to delete "${app.name}"? This removes it for all workstations.`)) {
+        try {
+          await api('apps/' + app.id, { method: 'DELETE' });
+          await refreshApps();
+        } catch (err) {
+          alert(err.message);
+          if (err.message.includes('Admin login required')) showLogin();
+        }
+      }
+    };
+
+    actDiv.append(editBtn, delBtn);
+    tdAct.appendChild(actDiv);
+    tr.appendChild(tdAct);
+
+    tbody.appendChild(tr);
+  });
+
+  // Populate datalist categories
+  $('#catList').replaceChildren(...[...new Set(apps.map(a => a.category))].filter(Boolean).map(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    return opt;
+  }));
+}
+
+async function refreshApps() {
+  try {
+    const data = await api('apps');
+    apps = data.apps || [];
+    renderTable();
+  } catch (err) {
+    console.error('Failed to load apps:', err);
+  }
+}
+
+function openEditDialog(a) {
+  editingId = a ? a.id : null;
+  $('#dialogTitle').textContent = a ? 'Edit Application' : 'Add Application';
+  $('#dialogSaveBtn').textContent = a ? 'Update Application' : 'Save Application';
+  $('#f-name').value = a?.name || '';
+  $('#f-url').value = a?.url || '';
+  $('#f-cat').value = a?.category || '';
+  $('#f-icon').value = a?.icon || '';
+  $('#f-desc').value = a?.description || '';
+  const errBox = $('#dialogErrorMsg');
+  errBox.style.display = 'none';
+  errBox.textContent = '';
+  $('#editDialog').showModal();
+}
+
+// Dialog close handlers
+document.querySelectorAll('[data-close]').forEach(b => (b.onclick = () => b.closest('dialog').close()));
+document.querySelectorAll('dialog').forEach(d => {
+  d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+});
+
+// Search input
+$('#adminSearch').addEventListener('input', renderTable);
+
+// Add app button
+$('#addAppBtn').onclick = () => openEditDialog(null);
+
+// Logout button
+$('#logoutBtn').onclick = async () => {
+  try {
+    await api('logout', { method: 'POST' });
+  } finally {
+    showLogin();
+  }
+};
+
+// Login form submit
+$('#adminLoginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = $('#loginSubmitBtn');
+  const errBox = $('#loginErrorMsg');
+  btn.disabled = true;
+  errBox.style.display = 'none';
+
+  try {
+    const res = await api('login', {
+      method: 'POST',
+      body: JSON.stringify({ password: $('#adminPw').value })
+    });
+    if (res.admin) {
+      showDashboard();
+    }
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// Edit / Add form submit
+$('#editDialogForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = $('#dialogSaveBtn');
+  const errBox = $('#dialogErrorMsg');
+  btn.disabled = true;
+  errBox.style.display = 'none';
+
+  const body = JSON.stringify({
+    name: $('#f-name').value,
+    url: $('#f-url').value,
+    category: $('#f-cat').value,
+    icon: $('#f-icon').value,
+    description: $('#f-desc').value
+  });
+
+  try {
+    await api(editingId ? 'apps/' + editingId : 'apps', {
+      method: editingId ? 'PUT' : 'POST',
+      body
+    });
+    $('#editDialog').close();
+    await refreshApps();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = 'block';
+    if (err.message.includes('Admin login required')) {
+      $('#editDialog').close();
+      showLogin();
+    }
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// Initialize
+(async () => {
+  try {
+    const session = await api('session');
+    if (session.factory) {
+      $('#loginFactoryTitle').textContent = session.factory;
+      $('#dashFactoryTitle').textContent = session.factory;
+      document.title = `${session.factory} | Admin Console`;
+    }
+    if (session.admin) {
+      showDashboard();
+    } else {
+      showLogin();
+    }
+  } catch (err) {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>

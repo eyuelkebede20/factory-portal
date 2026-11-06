@@ -10,9 +10,10 @@ A single internal web page that lists every company app (intranet, clinic, HR, e
 ## Project layout
 ```
 server.js                 API, auth, JSON storage, static hosting
-public/index.html         The whole UI (search, categories, admin dialogs)
+public/index.html         The public UI (search, categories, launcher)
+public/admin.html         The admin console (/admin) for secure login & app management
 Dockerfile                node:20-alpine, runs as non-root user "node"
-docker-compose.yml        restart: unless-stopped, port 80:3000, named volume portal-data
+docker-compose.yml        restart: unless-stopped, port 3010:3000, named volume portal-data
 .env.example              Template for .env (never commit .env)
 startup/open-portal.ps1   Opens the portal once per day per user
 startup/install-startup.ps1  Installs the login shortcut on a PC (run as admin)
@@ -65,14 +66,14 @@ npm start                   # starts server at http://localhost:3000
 - **Logs:** `docker logs -f factory-portal`
 
 ## Client PC auto-startup (one-time per PC)
-Goal: the portal opens by itself when a user signs in, once per day.
+Goal: the portal opens by itself when a user signs in at each startup.
 1. Option A, single PC: run as Administrator
    `powershell -ExecutionPolicy Bypass -File startup\install-startup.ps1 -Url http://portal`
 2. Option B, all PCs (Active Directory): put the `startup` folder on a network share, then in Group Policy go to Computer Configuration > Policies > Windows Settings > Scripts > Startup > PowerShell Scripts and add `install-startup.ps1` with parameter `-Url http://portal`.
 3. Option C, Intune: deploy `install-startup.ps1` as a PowerShell script run as system.
 4. Optional Home button in the browser: import `startup\browser-policy.reg` (or recreate the same values with Group Policy ADMX templates for Edge and Chrome).
 
-How it works: `install-startup.ps1` copies `open-portal.ps1` to `C:\ProgramData\FactoryPortal` and adds a shortcut to the **All Users** Startup folder. At each login the script waits 10 seconds for the network, checks `%LOCALAPPDATA%\factory-portal-last-open.txt` and opens the portal in the default browser only if it has not opened today. To open on every login, delete the date check in `open-portal.ps1`.
+How it works: `install-startup.ps1` copies `open-portal.ps1` to `C:\ProgramData\FactoryPortal` and adds a shortcut to the **All Users** Startup folder. At each startup/login the script verifies network/portal connectivity, opens the portal in the default browser, confirms the browser process launched, and records a verified launch log in `%LOCALAPPDATA%\FactoryPortal\startup-launch.log`.
 
 ## Security rules (do not weaken)
 - Admin routes must always go through `requireAdmin`. Never trust the browser to hide buttons.
