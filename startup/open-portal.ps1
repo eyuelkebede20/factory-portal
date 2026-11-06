@@ -18,8 +18,11 @@ for ($i = 0; $i -lt $maxAttempts; $i++) {
     Start-Sleep -Seconds 2
 }
 
-# 2. Append ?startup=1 parameter to trigger the browser startup popup
-$targetUrl = if ($Url -match "\?") { "$Url&startup=1" } else { "$Url?startup=1" }
+# 2. Append ?startup=1 and workstation identity parameters
+$hostParam = [System.Uri]::EscapeDataString($env:COMPUTERNAME)
+$userParam = [System.Uri]::EscapeDataString($env:USERNAME)
+$sep = if ($Url -match "\?") { "&" } else { "?" }
+$targetUrl = "${Url}${sep}startup=1&host=${hostParam}&user=${userParam}"
 
 # 3. Launch the portal in the default browser
 $process = Start-Process $targetUrl -PassThru -ErrorAction SilentlyContinue

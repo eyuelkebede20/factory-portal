@@ -200,6 +200,38 @@ test('admin authentication and CRUD workflow', async () => {
   assert.ok(res.headers['set-cookie'][0].includes('Max-Age=0'));
 });
 
+test('startup confirmation captures workstation and requires admin to view', async () => {
+  // 1. Post startup confirmation from workstation (public endpoint)
+  let res = await request('POST', '/api/confirm-startup', {}, JSON.stringify({
+    host: 'TEST-PC-01',
+    user: 'testuser'
+  }));
+  assert.equal(res.status, 201);
+  assert.equal(res.json.ok, true);
+  assert.equal(res.json.confirmed.host, 'TEST-PC-01');
+  assert.equal(res.json.confirmed.user, 'testuser');
+  assert.ok(res.json.confirmed.timestamp);
+
+  // 2. Unauthenticated attempt to view confirmations fails
+  res = await request('GET', '/api/confirmations');
+  assert.equal(res.status, 401);
+
+  // 3. Admin login
+  res = await request('POST', '/api/login', {}, JSON.stringify({ password: 'test-admin-password' }));
+  const cookie = res.headers['set-cookie'][0].split(';')[0];
+
+  // 4. Authenticated admin retrieves confirmations
+  res = await request('GET', '/api/confirmations', { Cookie: cookie });
+  assert.equal(res.status, 200);
+  assert.ok(Array.isArray(res.json.confirmations));
+  const found = res.json.confirmations.find(c => c.host === 'TEST-PC-01');
+  assert.ok(found);
+  assert.equal(found.user, 'testuser');
+
+  // Cleanup logout
+  await request('POST', '/api/logout', { Cookie: cookie });
+});
+
 test('tampered cookie is rejected', async () => {
   const fakeCookie = 'admin=9999999999999.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
   const res = await request('GET', '/api/session', { Cookie: fakeCookie });

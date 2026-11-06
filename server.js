@@ -12,6 +12,7 @@ const FACTORY_NAME = process.env.FACTORY_NAME || 'Homicho Ammunition Engineering
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'apps.json');
+const CONFIRMATIONS_FILE = path.join(DATA_DIR, 'confirmations.json');
 const SESSION_HOURS = 8;
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true';
 
@@ -34,6 +35,16 @@ function save(list) {
   const tmp = DATA_FILE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(list, null, 2));
   fs.renameSync(tmp, DATA_FILE);
+}
+function loadConfirmations() {
+  try { return JSON.parse(fs.readFileSync(CONFIRMATIONS_FILE, 'utf8')); }
+  catch { return []; }
+}
+function saveConfirmations(list) {
+  fs.mkdirSync(path.dirname(CONFIRMATIONS_FILE), { recursive: true });
+  const tmp = CONFIRMATIONS_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(list.slice(0, 500), null, 2));
+  fs.renameSync(tmp, CONFIRMATIONS_FILE);
 }
 
 // ---------- auth (signed cookie, no extra dependencies) ----------
@@ -155,6 +166,28 @@ app.delete('/api/apps/:id', requireAdmin, (req, res) => {
   if (next.length === list.length) return res.status(404).json({ error: 'App not found' });
   save(next);
   res.json({ ok: true });
+});
+
+// ---------- startup confirmation audit API ----------
+app.post('/api/confirm-startup', (req, res) => {
+  const b = req.body || {};
+  const s = (v, max) => String(v || '').trim().slice(0, max);
+  const entry = {
+    id: crypto.randomUUID(),
+    host: s(b.host, 100) || 'Unknown Workstation',
+    user: s(b.user, 100) || 'Unknown User',
+    ip: req.ip || req.socket?.remoteAddress || '',
+    userAgent: s(req.headers['user-agent'], 200),
+    timestamp: new Date().toISOString()
+  };
+  const list = loadConfirmations();
+  list.unshift(entry);
+  saveConfirmations(list);
+  res.status(201).json({ ok: true, confirmed: entry });
+});
+
+app.get('/api/confirmations', requireAdmin, (req, res) => {
+  res.json({ confirmations: loadConfirmations() });
 });
 
 app.get('/healthz', (req, res) => res.send('ok'));

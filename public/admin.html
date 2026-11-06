@@ -607,6 +607,33 @@ dialog h3 {
         </tbody>
       </table>
     </div>
+
+    <!-- Startup Confirmations Section -->
+    <div style="margin-top: 36px;">
+      <div class="toolbar" style="margin-bottom: 12px;">
+        <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          Workstation Startup Confirmations
+        </h2>
+        <div class="stats-chip" id="confirmCountChip">0 Confirmations Captured</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Workstation (Host)</th>
+              <th>User</th>
+              <th>IP Address</th>
+              <th>Confirmation Time</th>
+              <th style="text-align: right;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="confirmTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -672,6 +699,67 @@ function showDashboard() {
   $('#loginView').style.display = 'none';
   $('#dashboardView').style.display = 'flex';
   refreshApps();
+  loadConfirmationsTable();
+}
+
+async function loadConfirmationsTable() {
+  try {
+    const data = await api('confirmations');
+    const tbody = $('#confirmTableBody');
+    const chip = $('#confirmCountChip');
+    const list = data.confirmations || [];
+    if (chip) chip.textContent = `${list.length} Confirmation${list.length === 1 ? '' : 's'} Captured`;
+    if (!tbody) return;
+    tbody.replaceChildren();
+
+    if (list.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 5;
+      td.className = 'empty-row';
+      td.textContent = 'No workstation startup confirmations captured yet.';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    list.forEach(c => {
+      const tr = document.createElement('tr');
+
+      const tdHost = document.createElement('td');
+      const strong = document.createElement('strong');
+      strong.textContent = c.host || 'Unknown Workstation';
+      tdHost.appendChild(strong);
+      tr.appendChild(tdHost);
+
+      const tdUser = document.createElement('td');
+      tdUser.textContent = c.user || 'Unknown User';
+      tr.appendChild(tdUser);
+
+      const tdIp = document.createElement('td');
+      tdIp.style.fontFamily = 'monospace';
+      tdIp.textContent = c.ip || '-';
+      tr.appendChild(tdIp);
+
+      const tdTime = document.createElement('td');
+      try {
+        tdTime.textContent = new Date(c.timestamp).toLocaleString();
+      } catch (e) {
+        tdTime.textContent = c.timestamp;
+      }
+      tr.appendChild(tdTime);
+
+      const tdStatus = document.createElement('td');
+      tdStatus.style.textAlign = 'right';
+      const badge = document.createElement('span');
+      badge.style.cssText = 'background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;';
+      badge.textContent = 'Confirmed ✓';
+      tdStatus.appendChild(badge);
+      tr.appendChild(tdStatus);
+
+      tbody.appendChild(tr);
+    });
+  } catch (err) {}
 }
 
 function renderTable() {
