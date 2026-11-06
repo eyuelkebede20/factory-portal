@@ -22,8 +22,8 @@ if (!ADMIN_PASSWORD || !SESSION_SECRET) {
 
 // ---------- storage (JSON file, atomic writes) ----------
 const SEED = [
-  { id: 'seed-1', name: 'Intranet', url: 'http://192.168.1.10', category: 'Company', description: 'News, notices and documents' },
-  { id: 'seed-2', name: 'Clinic', url: 'http://192.168.1.20', category: 'Health', description: 'Clinic records and appointments' },
+  { id: 'seed-1', name: 'Intranet', url: 'http://192.168.1.10', category: 'Company', description: 'News, notices and documents', icon: '' },
+  { id: 'seed-2', name: 'Clinic', url: 'http://192.168.1.20', category: 'Health', description: 'Clinic records and appointments', icon: '/logo.png' },
 ];
 function load() {
   try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
@@ -73,7 +73,13 @@ setInterval(() => {
 function clean(body) {
   const b = body || {};
   const s = (v, max) => String(v || '').trim().slice(0, max);
-  const app = { name: s(b.name, 60), url: s(b.url, 300), category: s(b.category, 40) || 'General', description: s(b.description, 120) };
+  const app = {
+    name: s(b.name, 60),
+    url: s(b.url, 300),
+    category: s(b.category, 40) || 'General',
+    description: s(b.description, 120),
+    icon: s(b.icon, 500)
+  };
   if (!app.name) return { error: 'Name is required' };
   if (!/^https?:\/\/[^\s]+$/i.test(app.url)) return { error: 'Address must start with http:// or https://' };
   return { app };

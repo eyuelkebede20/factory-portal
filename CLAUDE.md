@@ -35,12 +35,12 @@ Changing `.env` needs `docker compose up -d` (recreate) to take effect.
 | GET | `/api/session` | public | `{admin, factory}` |
 | POST | `/api/login` | public | Body `{password}`; sets HttpOnly cookie (8 hours) |
 | POST | `/api/logout` | public | Clears cookie |
-| POST | `/api/apps` | admin | Add app `{name, url, category, description}` |
+| POST | `/api/apps` | admin | Add app `{name, url, category, description, icon}` |
 | PUT | `/api/apps/:id` | admin | Edit app |
 | DELETE | `/api/apps/:id` | admin | Delete app |
 | GET | `/healthz` | public | Health check |
 
-App record: `{ id, name (<=60), url (http/https only, <=300), category (<=40, default "General"), description (<=120, optional) }`.
+App record: `{ id, name (<=60), url (http/https only, <=300), category (<=40, default "General"), description (<=120, optional), icon (<=500, optional) }`.
 
 ## Deploy (Docker server)
 ```bash

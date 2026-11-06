@@ -3,78 +3,828 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/icon.png">
 <title>Factory Portal</title>
 <style>
-:root{--ink:#1c2733;--steel:#2f4558;--paper:#f6f7f8;--card:#fff;--line:#c9d0d6;--muted:#5b6b78;--safety:#f2b705;--danger:#b3261e;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--ink:#e8edf1;--steel:#141d26;--paper:#0f161d;--card:#1a242e;--line:#33414e;--muted:#9aabb8;--danger:#ff8a80;color-scheme:dark}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Segoe UI",Tahoma,Arial,sans-serif}
-header{background:var(--steel);color:#fff;padding:28px clamp(16px,5vw,64px) 22px}
-header h1{margin:0;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;letter-spacing:-.01em}
-header p{margin:4px 0 0;color:#c4d0da}
-.stripe{height:10px;background:repeating-linear-gradient(-45deg,var(--safety) 0 14px,#1c2733 14px 28px)}
-.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:18px clamp(16px,5vw,64px)}
-.bar input{flex:1 1 280px;max-width:520px;font:inherit;padding:12px 14px;border:2px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink)}
-.bar input:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--safety);outline-offset:2px}
-button{font:inherit;cursor:pointer;border:2px solid var(--ink);background:transparent;color:var(--ink);padding:9px 14px;border-radius:4px}
-button.primary{background:var(--safety);border-color:var(--safety);color:#1c2733;font-weight:700}
-button.danger{color:var(--danger);border-color:var(--danger)}
-button.small{padding:4px 10px;font-size:.85rem}
-.spacer{flex:1}
-main{padding:0 clamp(16px,5vw,64px) 48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:28px 32px}
-section h2{margin:0 0 8px;font-size:1rem;color:var(--muted);font-weight:600;border-bottom:2px solid var(--line);padding-bottom:4px}
-.row{display:flex;align-items:stretch;gap:8px;margin-bottom:8px}
-.tile{flex:1;display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit;background:var(--card);border:2px solid var(--line);border-left:6px solid var(--c);padding:10px 12px;border-radius:4px;min-width:0}
-.tile:hover{border-color:var(--ink);border-left-color:var(--c)}
-.tile div{min-width:0;width:100%}
-.tile b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile .desc{display:block;color:var(--muted);font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile .url{display:block;font-size:0.75rem;color:var(--muted);font-family:Consolas,SFMono-Regular,Menlo,Monaco,monospace;opacity:0.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
-.tools{display:flex;flex-direction:column;gap:4px}
-.empty{padding:0 clamp(16px,5vw,64px);color:var(--muted)}
-dialog{border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink);padding:22px;width:min(440px,92vw)}
-dialog::backdrop{background:rgba(0,0,0,.5)}
-dialog h3{margin:0 0 12px}
-label{display:block;margin:10px 0 2px;font-weight:600}
-dialog input{width:100%;font:inherit;padding:9px 10px;border:2px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink)}
-.err{color:var(--danger);min-height:1.4em;margin:8px 0 0}
-.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
-@media (prefers-reduced-motion:no-preference){.tile{transition:border-color .12s}}
+:root {
+  --bg-dark: #070e1c;
+  --bg-gradient: radial-gradient(circle at 15% 15%, #1d3b7a 0%, #0b1a38 45%, #060d1b 100%);
+  --surface-glass: rgba(15, 27, 49, 0.72);
+  --surface-card: rgba(18, 32, 59, 0.65);
+  --surface-card-hover: rgba(24, 43, 79, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-glass-hover: rgba(59, 130, 246, 0.45);
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --brand-blue: #3b82f6;
+  --brand-blue-hover: #2563eb;
+  --brand-glow: rgba(59, 130, 246, 0.25);
+  --accent-green: #10b981;
+  --danger: #ef4444;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Background geometric polygon & mesh lines inspired by bure_card */
+.bg-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-ambient svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.12;
+}
+.bg-glow-1 {
+  position: absolute;
+  top: -10%;
+  left: 20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+.bg-glow-2 {
+  position: absolute;
+  bottom: 5%;
+  right: 10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.page-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 4vw, 48px) 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Header & Top Bar */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-glass);
+}
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.brand-logo-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.brand-logo-wrap:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35), 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+.brand-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.brand-titles h1 {
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-titles p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 2px;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Button Styles */
+button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  outline: none;
+}
+button:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+.btn-primary {
+  background: var(--brand-blue);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35);
+}
+.btn-primary:hover {
+  background: var(--brand-blue-hover);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
+}
+.btn-glass {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(8px);
+}
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.btn-icon-sm {
+  padding: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+}
+.btn-icon-sm:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Hero Search Area */
+.search-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0 6px;
+}
+.search-box-wrap {
+  width: 100%;
+  max-width: 680px;
+  position: relative;
+}
+.search-box {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(14, 25, 47, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.25s ease;
+}
+.search-box:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45), 0 0 0 3px var(--brand-glow);
+  background: rgba(16, 29, 56, 0.9);
+}
+.search-icon {
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+.search-box:focus-within .search-icon {
+  color: var(--brand-blue);
+}
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 1.05rem;
+  color: #fff;
+  min-width: 0;
+}
+.search-input::placeholder {
+  color: var(--text-dim);
+}
+.search-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 600;
+  user-select: none;
+}
+.search-clear {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: var(--text-dim);
+  display: none;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.search-clear:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Category Filter Pills */
+.filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pill.active {
+  background: var(--brand-blue);
+  color: #fff;
+  border-color: var(--brand-blue);
+  box-shadow: 0 2px 10px var(--brand-glow);
+}
+
+/* Category Sections & Cards Grid */
+.category-group {
+  margin-bottom: 36px;
+}
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-glass);
+}
+.category-header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: -0.01em;
+}
+.category-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 22px;
+}
+
+/* Modern Card */
+.app-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.25s ease, 
+              box-shadow 0.25s ease, 
+              background 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+.app-card:hover {
+  transform: translateY(-5px);
+  background: var(--surface-card-hover);
+  border-color: var(--border-glass-hover);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px var(--brand-glow);
+}
+
+/* Card Visual / Thumbnail / Alt Image */
+.card-banner {
+  height: 110px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--card-c1, #1e3a8a), var(--card-c2, #0f172a));
+}
+.card-banner-bg-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 12px 12px;
+  pointer-events: none;
+}
+.card-icon-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 1;
+  transition: transform 0.25s ease;
+}
+.app-card:hover .card-icon-img {
+  transform: scale(1.08);
+}
+/* Fallback Alt Visual / Monogram Graphic */
+.card-alt-visual {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
+  transition: transform 0.25s ease;
+}
+.app-card:hover .card-alt-visual {
+  transform: scale(1.08);
+}
+
+.card-cat-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 2;
+  letter-spacing: 0.02em;
+}
+
+/* Card Content */
+.card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+}
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-launch-icon {
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.app-card:hover .card-launch-icon {
+  transform: translate(2px, -2px);
+  color: var(--brand-blue);
+}
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.4em;
+}
+.card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--border-glass);
+}
+.card-url-chip {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 190px;
+}
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--text-dim);
+}
+.empty-state svg {
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.empty-state p {
+  font-size: 1rem;
+}
+
+/* Dialogs */
+dialog {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  background: rgba(13, 23, 42, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: #fff;
+  padding: 28px;
+  width: min(480px, 94vw);
+  margin: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+dialog::backdrop {
+  background: rgba(4, 9, 20, 0.75);
+  backdrop-filter: blur(6px);
+}
+dialog h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.form-group {
+  margin-bottom: 14px;
+}
+.form-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.92rem;
+  outline: none;
+  transition: all 0.2s;
+}
+.form-group input:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+  background: rgba(255, 255, 255, 0.08);
+}
+.form-helper {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.form-error {
+  color: #f87171;
+  font-size: 0.84rem;
+  min-height: 1.2em;
+  margin: 10px 0;
+}
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Live Card Preview Inside Modal */
+.preview-wrap {
+  margin: 14px 0 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+.preview-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .brand-group { width: 100%; }
+  .header-actions { width: 100%; justify-content: flex-end; }
+  .search-box { padding: 10px 14px; }
+}
 </style>
 </head>
 <body>
-<header><h1 id="factory">Factory Portal</h1><p>Click an app to open it.</p></header>
-<div class="stripe"></div>
-<div class="bar">
-  <input id="q" type="search" placeholder="Search apps, e.g. clinic" autofocus aria-label="Search apps">
-  <span class="spacer"></span>
-  <button id="add" class="primary" hidden>Add app</button>
-  <button id="auth">Admin login</button>
+
+<!-- Ambient background decor (SVG geometry inspired by bure_card) -->
+<div class="bg-ambient">
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+  <svg viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none">
+    <path d="M-100 200 L600 -100 L1600 700 L900 1100 Z" fill="rgba(37, 99, 235, 0.03)" />
+    <path d="M200 800 L1200 100 L1500 500 L800 1000 Z" fill="rgba(14, 165, 233, 0.02)" />
+    <line x1="0" y1="300" x2="1440" y2="400" stroke="rgba(255, 255, 255, 0.02)" stroke-width="1" />
+    <line x1="0" y1="600" x2="1440" y2="700" stroke="rgba(255, 255, 255, 0.02)" stroke-width="1" />
+  </svg>
 </div>
-<main id="list"></main>
-<p class="empty" id="empty" hidden>No apps match your search.</p>
 
-<dialog id="login"><form method="dialog" id="loginForm">
-  <h3>Admin login</h3>
-  <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
-  <p class="err" id="loginErr"></p>
-  <div class="actions"><button type="button" data-close>Cancel</button><button class="primary">Log in</button></div>
-</form></dialog>
+<div class="page-container">
 
-<dialog id="edit"><form method="dialog" id="editForm">
-  <h3 id="editTitle">Add app</h3>
-  <label for="f-name">Name</label><input id="f-name" maxlength="60" required>
-  <label for="f-url">Address</label><input id="f-url" placeholder="http://192.168.1.30:8080" required>
-  <label for="f-cat">Category</label><input id="f-cat" list="cats" maxlength="40" placeholder="Company, Health, Production...">
-  <datalist id="cats"></datalist>
-  <label for="f-desc">Short description (optional)</label><input id="f-desc" maxlength="120">
-  <p class="err" id="editErr"></p>
-  <div class="actions"><button type="button" data-close>Cancel</button><button class="primary">Save app</button></div>
-</form></dialog>
+  <!-- Header -->
+  <header>
+    <div class="brand-group">
+      <div class="brand-logo-wrap" title="Factory Portal">
+        <img src="/logo.png" alt="Portal Logo" id="brandLogo" onerror="this.src='/icon.png';">
+      </div>
+      <div class="brand-titles">
+        <h1>
+          <span id="factory">Factory Portal</span>
+          <span class="status-pill">
+            <span class="status-dot"></span> Online
+          </span>
+        </h1>
+        <p id="portalSub">Internal Directory & Unified Applications Portal</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="add" class="btn-primary" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add App
+      </button>
+      <button id="auth" class="btn-glass">
+        <svg id="lockIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span id="authText">Admin Login</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Search Section -->
+  <section class="search-section">
+    <div class="search-box-wrap">
+      <div class="search-box">
+        <div class="search-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
+        <input id="q" type="search" class="search-input" placeholder="Search applications, categories, or keywords..." autofocus aria-label="Search applications">
+        <button id="clearSearch" class="search-clear" title="Clear search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div class="search-badge" title="Press / to focus search">/</div>
+      </div>
+    </div>
+
+    <!-- Category filter pills -->
+    <div class="filter-pills" id="pills">
+      <div class="pill active" data-cat="ALL">All Apps</div>
+    </div>
+  </section>
+
+  <!-- Main Content Cards Grid -->
+  <main id="list"></main>
+
+  <!-- Empty State -->
+  <div class="empty-state" id="empty" hidden>
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <p id="emptyText">No applications found matching your search.</p>
+  </div>
+
+</div>
+
+<!-- Admin Login Dialog -->
+<dialog id="login">
+  <form method="dialog" id="loginForm">
+    <h3>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      Admin Authentication
+    </h3>
+    <div class="form-group">
+      <label for="pw">Admin Password</label>
+      <input id="pw" type="password" autocomplete="current-password" placeholder="Enter password from .env" required>
+    </div>
+    <p class="form-error" id="loginErr"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn-glass" data-close>Cancel</button>
+      <button class="btn-primary">Authenticate</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Add / Edit App Dialog -->
+<dialog id="edit">
+  <form method="dialog" id="editForm">
+    <h3 id="editTitle">Add Application</h3>
+    <div class="form-group">
+      <label for="f-name">App Name *</label>
+      <input id="f-name" maxlength="60" placeholder="e.g. Clinic ERP, Intranet, SCADA" required>
+    </div>
+    <div class="form-group">
+      <label for="f-url">Network Address (URL) *</label>
+      <input id="f-url" placeholder="http://192.168.20.10:8080 or https://..." required>
+    </div>
+    <div class="form-group">
+      <label for="f-cat">Category</label>
+      <input id="f-cat" list="cats" maxlength="40" placeholder="e.g. Health, Company, Production, IT">
+      <datalist id="cats"></datalist>
+    </div>
+    <div class="form-group">
+      <label for="f-icon">Icon / Image URL (optional)</label>
+      <input id="f-icon" maxlength="500" placeholder="e.g. /logo.png, /icon.png, or image URL">
+      <p class="form-helper">Leave empty to auto-generate a vibrant monogram visual.</p>
+    </div>
+    <div class="form-group">
+      <label for="f-desc">Description (optional)</label>
+      <input id="f-desc" maxlength="120" placeholder="Brief explanation of the service">
+    </div>
+
+    <!-- Live Card Preview -->
+    <div class="preview-wrap">
+      <div class="preview-label">Live Preview</div>
+      <div id="modalPreview"></div>
+    </div>
+
+    <p class="form-error" id="editErr"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn-glass" data-close>Cancel</button>
+      <button class="btn-primary" id="saveBtn">Save Application</button>
+    </div>
+  </form>
+</dialog>
 
 <script>
 const $ = (s) => document.querySelector(s);
-let apps = [], admin = false, editingId = null;
+let apps = [];
+let admin = false;
+let editingId = null;
+let activeCategory = 'ALL';
+
+// Theme generator: deterministic gradients and colors based on string
+const PALETTES = [
+  ['#1e3a8a', '#0f172a', '#3b82f6'],
+  ['#065f46', '#064e3b', '#10b981'],
+  ['#4c1d95', '#312e81', '#8b5cf6'],
+  ['#831843', '#500724', '#ec4899'],
+  ['#7c2d12', '#451a03', '#f97316'],
+  ['#155e75', '#083344', '#06b6d4'],
+  ['#1f2937', '#111827', '#64748b']
+];
+function getPalette(str) {
+  let h = 0;
+  for (let i = 0; i < (str || '').length; i++) h = (h * 31 + str.charCodeAt(i)) % PALETTES.length;
+  return PALETTES[h] || PALETTES[0];
+}
+
+// Generate 2-letter monogram for fallback alt image
+function getMonogram(name) {
+  if (!name) return 'AP';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
 async function api(path, opts = {}) {
   const r = await fetch('/api/' + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
@@ -82,75 +832,274 @@ async function api(path, opts = {}) {
   if (!r.ok) throw new Error(j.error || 'Request failed');
   return j;
 }
-const colorFor = (t) => { let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 55% 42%)`; };
-const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
+// Create Card Element
+function createCard(a, isPreview = false) {
+  const [c1, c2, accent] = getPalette(a.category + ':' + a.name);
+  const card = document.createElement(isPreview ? 'div' : 'a');
+  card.className = 'app-card';
+  if (!isPreview) {
+    card.href = a.url || '#';
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
+  }
+  card.style.setProperty('--card-c1', c1);
+  card.style.setProperty('--card-c2', c2);
+
+  // Banner / Alt Visual
+  const banner = document.createElement('div');
+  banner.className = 'card-banner';
+
+  const pattern = document.createElement('div');
+  pattern.className = 'card-banner-bg-pattern';
+  banner.appendChild(pattern);
+
+  const catBadge = document.createElement('span');
+  catBadge.className = 'card-cat-badge';
+  catBadge.textContent = a.category || 'General';
+  banner.appendChild(catBadge);
+
+  const hasIcon = Boolean(a.icon && a.icon.trim());
+
+  if (hasIcon) {
+    const img = document.createElement('img');
+    img.className = 'card-icon-img';
+    img.src = a.icon;
+    img.alt = a.name;
+    // Graceful fallback to alt visual monogram if image fails to load
+    img.onerror = () => {
+      img.remove();
+      const alt = document.createElement('div');
+      alt.className = 'card-alt-visual';
+      alt.textContent = getMonogram(a.name);
+      banner.appendChild(alt);
+    };
+    banner.appendChild(img);
+  } else {
+    const alt = document.createElement('div');
+    alt.className = 'card-alt-visual';
+    alt.textContent = getMonogram(a.name);
+    banner.appendChild(alt);
+  }
+  card.appendChild(banner);
+
+  // Card Body
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  const titleRow = document.createElement('div');
+  titleRow.className = 'card-title-row';
+
+  const title = document.createElement('h3');
+  title.className = 'card-title';
+  title.textContent = a.name || 'Application';
+  titleRow.appendChild(title);
+
+  const launchIcon = document.createElement('div');
+  launchIcon.className = 'card-launch-icon';
+  launchIcon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
+  titleRow.appendChild(launchIcon);
+  body.appendChild(titleRow);
+
+  const desc = document.createElement('p');
+  desc.className = 'card-desc';
+  desc.textContent = a.description || 'Quick launch service for internal network operations.';
+  body.appendChild(desc);
+
+  const footer = document.createElement('div');
+  footer.className = 'card-footer';
+
+  const urlChip = document.createElement('span');
+  urlChip.className = 'card-url-chip';
+  urlChip.textContent = (a.url || '').replace(/^https?:\/\//i, '');
+  footer.appendChild(urlChip);
+
+  if (admin && !isPreview) {
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'btn-icon-sm';
+    editBtn.title = 'Edit app';
+    editBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+    editBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openEdit(a);
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'btn-icon-sm btn-danger';
+    delBtn.title = 'Delete app';
+    delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+    delBtn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (confirm(`Delete "${a.name}" from the portal for all computers?`)) {
+        try {
+          await api('apps/' + a.id, { method: 'DELETE' });
+          await refresh();
+        } catch (err) {
+          alert(err.message);
+          if (err.message.includes('Admin login required')) setAdmin(false);
+        }
+      }
+    };
+
+    actions.append(editBtn, delBtn);
+    footer.appendChild(actions);
+  }
+
+  body.appendChild(footer);
+  card.appendChild(body);
+  return card;
+}
+
+// Render the application list
 function render() {
   const q = $('#q').value.trim().toLowerCase();
-  const shown = apps.filter((a) => [a.name, a.category, a.description, a.url].join(' ').toLowerCase().includes(q));
-  const groups = {};
-  shown.forEach((a) => (groups[a.category] ||= []).push(a));
-  const main = $('#list'); main.replaceChildren();
-  Object.keys(groups).sort().forEach((cat) => {
-    const sec = el('section', {}, el('h2', { textContent: cat }));
-    groups[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach((a) => {
-      const tile = el('a', { className: 'tile', href: a.url, target: '_blank', rel: 'noopener' },
-        el('div', {},
-          el('b', { textContent: a.name }),
-          ...(a.description ? [el('span', { className: 'desc', textContent: a.description })] : []),
-          el('span', { className: 'url', textContent: a.url })
-        )
-      );
-      tile.style.setProperty('--c', colorFor(cat));
-      const row = el('div', { className: 'row' }, tile);
-      if (admin) {
-        const ed = el('button', { className: 'small', textContent: 'Edit' }); ed.onclick = () => openEdit(a);
-        const del = el('button', { className: 'small danger', textContent: 'Delete' });
-        del.onclick = async () => {
-          if (confirm(`Delete "${a.name}" for every computer?`)) {
-            try {
-              await api('apps/' + a.id, { method: 'DELETE' });
-              await refresh();
-            } catch (err) {
-              alert(err.message);
-              if (err.message.includes('Admin login required')) setAdmin(false);
-            }
-          }
-        };
-        row.append(el('div', { className: 'tools' }, ed, del));
-      }
-      sec.append(row);
-    });
-    main.append(sec);
+  $('#clearSearch').style.display = q ? 'inline-flex' : 'none';
+
+  let filtered = apps.filter((a) => {
+    const matchesQuery = !q || [a.name, a.category, a.description, a.url].join(' ').toLowerCase().includes(q);
+    const matchesCat = activeCategory === 'ALL' || a.category === activeCategory;
+    return matchesQuery && matchesCat;
   });
+
+  // Group by category
+  const groups = {};
+  filtered.forEach((a) => {
+    const cat = a.category || 'General';
+    (groups[cat] ||= []).push(a);
+  });
+
+  const main = $('#list');
+  main.replaceChildren();
+
+  const sortedCats = Object.keys(groups).sort();
+  sortedCats.forEach((cat) => {
+    const catGroup = document.createElement('section');
+    catGroup.className = 'category-group';
+
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.innerHTML = `<h2>${cat}</h2><span class="category-count">${groups[cat].length}</span>`;
+    catGroup.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'cards-grid';
+    groups[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach((app) => {
+      grid.appendChild(createCard(app));
+    });
+
+    catGroup.appendChild(grid);
+    main.appendChild(catGroup);
+  });
+
+  // Empty state handling
+  const empty = $('#empty');
+  const emptyText = $('#emptyText');
   if (apps.length === 0) {
-    $('#empty').textContent = admin ? 'No apps added yet. Click "Add app" above.' : 'No apps added yet.';
-    $('#empty').hidden = false;
-  } else if (shown.length === 0) {
-    $('#empty').textContent = 'No apps match your search.';
-    $('#empty').hidden = false;
+    emptyText.textContent = admin ? 'No apps added yet. Click "Add App" above to create one.' : 'No apps available.';
+    empty.hidden = false;
+  } else if (filtered.length === 0) {
+    emptyText.textContent = 'No applications match your search or filter.';
+    empty.hidden = false;
   } else {
-    $('#empty').hidden = true;
+    empty.hidden = true;
   }
-  $('#cats').replaceChildren(...[...new Set(apps.map((a) => a.category))].map((c) => el('option', { value: c })));
+
+  // Update categories filter pills
+  renderPills();
+
+  // Datalist options
+  $('#cats').replaceChildren(...[...new Set(apps.map((a) => a.category))].filter(Boolean).map((c) => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    return opt;
+  }));
 }
-async function refresh() { apps = (await api('apps')).apps; render(); }
-function setAdmin(v) { admin = v; $('#add').hidden = !v; $('#auth').textContent = v ? 'Log out' : 'Admin login'; render(); }
+
+function renderPills() {
+  const cats = ['ALL', ...new Set(apps.map((a) => a.category || 'General'))].filter(Boolean);
+  const container = $('#pills');
+  container.replaceChildren(...cats.map((c) => {
+    const pill = document.createElement('div');
+    pill.className = 'pill' + (activeCategory === c ? ' active' : '');
+    pill.textContent = c === 'ALL' ? 'All Apps' : c;
+    pill.onclick = () => {
+      activeCategory = c;
+      render();
+    };
+    return pill;
+  }));
+}
+
+async function refresh() {
+  apps = (await api('apps')).apps;
+  render();
+}
+
+function setAdmin(v) {
+  admin = v;
+  $('#add').hidden = !v;
+  $('#authText').textContent = v ? 'Log Out' : 'Admin Login';
+  $('#lockIcon').innerHTML = v 
+    ? `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path>` 
+    : `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>`;
+  render();
+}
+
+// Live preview inside Add / Edit Dialog
+function updateModalPreview() {
+  const preview = $('#modalPreview');
+  preview.replaceChildren(createCard({
+    name: $('#f-name').value.trim() || 'Sample Application',
+    url: $('#f-url').value.trim() || 'http://192.168.20.10:8080',
+    category: $('#f-cat').value.trim() || 'General',
+    description: $('#f-desc').value.trim() || 'Short description will appear here.',
+    icon: $('#f-icon').value.trim()
+  }, true));
+}
 
 function openEdit(a) {
   editingId = a ? a.id : null;
-  $('#editTitle').textContent = a ? 'Edit app' : 'Add app';
-  $('#f-name').value = a?.name || ''; $('#f-url').value = a?.url || '';
-  $('#f-cat').value = a?.category || ''; $('#f-desc').value = a?.description || '';
-  $('#editErr').textContent = ''; $('#edit').showModal();
+  $('#editTitle').textContent = a ? 'Edit Application' : 'Add Application';
+  $('#saveBtn').textContent = a ? 'Update Application' : 'Add Application';
+  $('#f-name').value = a?.name || '';
+  $('#f-url').value = a?.url || '';
+  $('#f-cat').value = a?.category || '';
+  $('#f-icon').value = a?.icon || '';
+  $('#f-desc').value = a?.description || '';
+  $('#editErr').textContent = '';
+  updateModalPreview();
+  $('#edit').showModal();
 }
+
+// Dialog listeners
 document.querySelectorAll('[data-close]').forEach((b) => (b.onclick = () => b.closest('dialog').close()));
 document.querySelectorAll('dialog').forEach((d) => {
   d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
 });
-$('#q').oninput = render;
+
+['f-name', 'f-url', 'f-cat', 'f-icon', 'f-desc'].forEach((id) => {
+  $('#' + id).addEventListener('input', updateModalPreview);
+});
+
+// Search input handling
+$('#q').addEventListener('input', render);
+$('#clearSearch').addEventListener('click', () => {
+  $('#q').value = '';
+  $('#q').focus();
+  render();
+});
 $('#q').addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && $('#q').value) { $('#q').value = ''; render(); }
+  if (e.key === 'Escape' && $('#q').value) {
+    $('#q').value = '';
+    render();
+  }
 });
 window.addEventListener('keydown', (e) => {
   if (e.key === '/' && document.activeElement !== $('#q') && !$('dialog[open]') && e.target.tagName !== 'INPUT') {
@@ -160,14 +1109,22 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// Admin actions
 $('#add').onclick = () => openEdit(null);
 $('#auth').onclick = async () => {
-  if (admin) { await api('logout', { method: 'POST' }); setAdmin(false); }
-  else { $('#pw').value = ''; $('#loginErr').textContent = ''; $('#login').showModal(); }
+  if (admin) {
+    await api('logout', { method: 'POST' });
+    setAdmin(false);
+  } else {
+    $('#pw').value = '';
+    $('#loginErr').textContent = '';
+    $('#login').showModal();
+  }
 };
+
 $('#loginForm').onsubmit = async (e) => {
   e.preventDefault();
-  const btn = e.target.querySelector('button.primary');
+  const btn = e.target.querySelector('button.btn-primary');
   btn.disabled = true;
   try {
     await api('login', { method: 'POST', body: JSON.stringify({ password: $('#pw').value }) });
@@ -179,13 +1136,23 @@ $('#loginForm').onsubmit = async (e) => {
     btn.disabled = false;
   }
 };
+
 $('#editForm').onsubmit = async (e) => {
   e.preventDefault();
-  const btn = e.target.querySelector('button.primary');
+  const btn = $('#saveBtn');
   btn.disabled = true;
-  const body = JSON.stringify({ name: $('#f-name').value, url: $('#f-url').value, category: $('#f-cat').value, description: $('#f-desc').value });
+  const body = JSON.stringify({
+    name: $('#f-name').value,
+    url: $('#f-url').value,
+    category: $('#f-cat').value,
+    icon: $('#f-icon').value,
+    description: $('#f-desc').value
+  });
   try {
-    await api(editingId ? 'apps/' + editingId : 'apps', { method: editingId ? 'PUT' : 'POST', body });
+    await api(editingId ? 'apps/' + editingId : 'apps', {
+      method: editingId ? 'PUT' : 'POST',
+      body
+    });
     $('#edit').close();
     await refresh();
   } catch (err) {
@@ -196,6 +1163,7 @@ $('#editForm').onsubmit = async (e) => {
   }
 };
 
+// Initial bootstrap
 (async () => {
   try {
     const [s, data] = await Promise.all([api('session'), api('apps')]);
@@ -204,10 +1172,12 @@ $('#editForm').onsubmit = async (e) => {
     apps = data.apps;
     setAdmin(s.admin);
   } catch (err) {
-    $('#empty').textContent = 'Unable to connect to portal server. Retrying...';
+    $('#emptyText').textContent = 'Unable to connect to portal server. Retrying...';
     $('#empty').hidden = false;
   }
 })();
+
+// Auto-refresh every 60 seconds
 setInterval(() => refresh().catch(() => {}), 60000);
 </script>
 </body>
