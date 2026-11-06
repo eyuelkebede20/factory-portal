@@ -47,6 +47,13 @@ App record: `{ id, name (<=60), url (http/https only, <=300), category (<=40, de
 cp .env.example .env        # then edit ADMIN_PASSWORD, SESSION_SECRET, FACTORY_NAME
 docker compose up -d --build
 ```
+
+### Local development & testing (without Docker)
+```bash
+npm install
+npm test                    # runs built-in test suite (node --test)
+npm start                   # starts server at http://localhost:3000
+```
 - **Server auto-start after reboot:** the container has `restart: unless-stopped`, so it returns whenever Docker starts. Make sure Docker itself starts on boot:
   - Linux: `sudo systemctl enable docker`
   - Windows Docker Desktop: Settings > General > "Start Docker Desktop when you sign in", or use Docker Engine as a service.

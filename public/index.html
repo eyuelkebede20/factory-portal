@@ -26,9 +26,10 @@ section h2{margin:0 0 8px;font-size:1rem;color:var(--muted);font-weight:600;bord
 .row{display:flex;align-items:stretch;gap:8px;margin-bottom:8px}
 .tile{flex:1;display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit;background:var(--card);border:2px solid var(--line);border-left:6px solid var(--c);padding:10px 12px;border-radius:4px;min-width:0}
 .tile:hover{border-color:var(--ink);border-left-color:var(--c)}
-.tile div{min-width:0}
-.tile b{display:block}
-.tile small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile div{min-width:0;width:100%}
+.tile b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .desc{display:block;color:var(--muted);font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .url{display:block;font-size:0.75rem;color:var(--muted);font-family:Consolas,SFMono-Regular,Menlo,Monaco,monospace;opacity:0.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
 .tools{display:flex;flex-direction:column;gap:4px}
 .empty{padding:0 clamp(16px,5vw,64px);color:var(--muted)}
 dialog{border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink);padding:22px;width:min(440px,92vw)}
@@ -94,20 +95,43 @@ function render() {
     const sec = el('section', {}, el('h2', { textContent: cat }));
     groups[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach((a) => {
       const tile = el('a', { className: 'tile', href: a.url, target: '_blank', rel: 'noopener' },
-        el('div', {}, el('b', { textContent: a.name }), ...(a.description ? [el('small', { textContent: a.description })] : []), el('small', { textContent: a.url })));
+        el('div', {},
+          el('b', { textContent: a.name }),
+          ...(a.description ? [el('span', { className: 'desc', textContent: a.description })] : []),
+          el('span', { className: 'url', textContent: a.url })
+        )
+      );
       tile.style.setProperty('--c', colorFor(cat));
       const row = el('div', { className: 'row' }, tile);
       if (admin) {
         const ed = el('button', { className: 'small', textContent: 'Edit' }); ed.onclick = () => openEdit(a);
         const del = el('button', { className: 'small danger', textContent: 'Delete' });
-        del.onclick = async () => { if (confirm(`Delete "${a.name}" for every computer?`)) { await api('apps/' + a.id, { method: 'DELETE' }); await refresh(); } };
+        del.onclick = async () => {
+          if (confirm(`Delete "${a.name}" for every computer?`)) {
+            try {
+              await api('apps/' + a.id, { method: 'DELETE' });
+              await refresh();
+            } catch (err) {
+              alert(err.message);
+              if (err.message.includes('Admin login required')) setAdmin(false);
+            }
+          }
+        };
         row.append(el('div', { className: 'tools' }, ed, del));
       }
       sec.append(row);
     });
     main.append(sec);
   });
-  $('#empty').hidden = shown.length > 0;
+  if (apps.length === 0) {
+    $('#empty').textContent = admin ? 'No apps added yet. Click "Add app" above.' : 'No apps added yet.';
+    $('#empty').hidden = false;
+  } else if (shown.length === 0) {
+    $('#empty').textContent = 'No apps match your search.';
+    $('#empty').hidden = false;
+  } else {
+    $('#empty').hidden = true;
+  }
   $('#cats').replaceChildren(...[...new Set(apps.map((a) => a.category))].map((c) => el('option', { value: c })));
 }
 async function refresh() { apps = (await api('apps')).apps; render(); }
@@ -121,7 +145,21 @@ function openEdit(a) {
   $('#editErr').textContent = ''; $('#edit').showModal();
 }
 document.querySelectorAll('[data-close]').forEach((b) => (b.onclick = () => b.closest('dialog').close()));
+document.querySelectorAll('dialog').forEach((d) => {
+  d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+});
 $('#q').oninput = render;
+$('#q').addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('#q').value) { $('#q').value = ''; render(); }
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== $('#q') && !$('dialog[open]') && e.target.tagName !== 'INPUT') {
+    e.preventDefault();
+    $('#q').focus();
+    $('#q').select();
+  }
+});
+
 $('#add').onclick = () => openEdit(null);
 $('#auth').onclick = async () => {
   if (admin) { await api('logout', { method: 'POST' }); setAdmin(false); }
@@ -129,22 +167,46 @@ $('#auth').onclick = async () => {
 };
 $('#loginForm').onsubmit = async (e) => {
   e.preventDefault();
-  try { await api('login', { method: 'POST', body: JSON.stringify({ password: $('#pw').value }) }); $('#login').close(); setAdmin(true); }
-  catch (err) { $('#loginErr').textContent = err.message; }
+  const btn = e.target.querySelector('button.primary');
+  btn.disabled = true;
+  try {
+    await api('login', { method: 'POST', body: JSON.stringify({ password: $('#pw').value }) });
+    $('#login').close();
+    setAdmin(true);
+  } catch (err) {
+    $('#loginErr').textContent = err.message;
+  } finally {
+    btn.disabled = false;
+  }
 };
 $('#editForm').onsubmit = async (e) => {
   e.preventDefault();
+  const btn = e.target.querySelector('button.primary');
+  btn.disabled = true;
   const body = JSON.stringify({ name: $('#f-name').value, url: $('#f-url').value, category: $('#f-cat').value, description: $('#f-desc').value });
   try {
     await api(editingId ? 'apps/' + editingId : 'apps', { method: editingId ? 'PUT' : 'POST', body });
-    $('#edit').close(); await refresh();
-  } catch (err) { $('#editErr').textContent = err.message; }
+    $('#edit').close();
+    await refresh();
+  } catch (err) {
+    $('#editErr').textContent = err.message;
+    if (err.message.includes('Admin login required')) setAdmin(false);
+  } finally {
+    btn.disabled = false;
+  }
 };
 
 (async () => {
-  const s = await api('session');
-  $('#factory').textContent = s.factory; document.title = s.factory;
-  await refresh(); setAdmin(s.admin);
+  try {
+    const [s, data] = await Promise.all([api('session'), api('apps')]);
+    $('#factory').textContent = s.factory;
+    document.title = s.factory;
+    apps = data.apps;
+    setAdmin(s.admin);
+  } catch (err) {
+    $('#empty').textContent = 'Unable to connect to portal server. Retrying...';
+    $('#empty').hidden = false;
+  }
 })();
 setInterval(() => refresh().catch(() => {}), 60000);
 </script>

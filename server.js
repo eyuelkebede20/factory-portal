@@ -1,4 +1,7 @@
 'use strict';
+if (typeof process.loadEnvFile === 'function') {
+  try { process.loadEnvFile(); } catch {}
+}
 const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -7,8 +10,10 @@ const path = require('path');
 const { ADMIN_PASSWORD, SESSION_SECRET } = process.env;
 const FACTORY_NAME = process.env.FACTORY_NAME || 'Factory Portal';
 const PORT = Number(process.env.PORT) || 3000;
-const DATA_FILE = path.join(process.env.DATA_DIR || '/data', 'apps.json');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'apps.json');
 const SESSION_HOURS = 8;
+const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true';
 
 if (!ADMIN_PASSWORD || !SESSION_SECRET) {
   console.error('Missing ADMIN_PASSWORD or SESSION_SECRET. Copy .env.example to .env and fill both.');
@@ -52,13 +57,23 @@ const requireAdmin = (req, res, next) =>
   isAdmin(req) ? next() : res.status(401).json({ error: 'Admin login required' });
 
 // login lockout: 5 wrong tries per IP -> 5 minute wait
+const LOCKOUT_WINDOW_MS = 5 * 60 * 1000;
 const fails = new Map();
 function locked(ip) { const f = fails.get(ip); return f && f.n >= 5 && f.until > Date.now(); }
 
+// Prune old lockout entries every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, f] of fails.entries()) {
+    if (f.until < now) fails.delete(ip);
+  }
+}, 3600 * 1000).unref();
+
 // ---------- validation ----------
 function clean(body) {
+  const b = body || {};
   const s = (v, max) => String(v || '').trim().slice(0, max);
-  const app = { name: s(body.name, 60), url: s(body.url, 300), category: s(body.category, 40) || 'General', description: s(body.description, 120) };
+  const app = { name: s(b.name, 60), url: s(b.url, 300), category: s(b.category, 40) || 'General', description: s(b.description, 120) };
   if (!app.name) return { error: 'Name is required' };
   if (!/^https?:\/\/[^\s]+$/i.test(app.url)) return { error: 'Address must start with http:// or https://' };
   return { app };
@@ -66,6 +81,9 @@ function clean(body) {
 
 // ---------- app ----------
 const app = express();
+if (process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
 app.disable('x-powered-by');
 app.use(express.json({ limit: '10kb' }));
 app.use((req, res, next) => {
@@ -81,17 +99,26 @@ app.get('/api/apps', (req, res) => res.json({ apps: load() }));
 app.post('/api/login', (req, res) => {
   const ip = req.ip;
   if (locked(ip)) return res.status(429).json({ error: 'Too many wrong attempts. Try again in 5 minutes.' });
-  if (!safeEq(req.body.password || '', ADMIN_PASSWORD)) {
-    const f = fails.get(ip) || { n: 0, until: 0 };
-    f.n += 1; f.until = Date.now() + 5 * 60 * 1000; fails.set(ip, f);
+  if (!safeEq(req.body?.password || '', ADMIN_PASSWORD)) {
+    const now = Date.now();
+    const f = fails.get(ip);
+    if (!f || f.until < now) {
+      fails.set(ip, { n: 1, until: now + LOCKOUT_WINDOW_MS });
+    } else {
+      f.n += 1;
+      f.until = now + LOCKOUT_WINDOW_MS;
+      fails.set(ip, f);
+    }
     return res.status(401).json({ error: 'Wrong password' });
   }
   fails.delete(ip);
-  res.set('Set-Cookie', `admin=${makeToken()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_HOURS * 3600}`);
+  const secureFlag = COOKIE_SECURE ? '; Secure' : '';
+  res.set('Set-Cookie', `admin=${makeToken()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_HOURS * 3600}${secureFlag}`);
   res.json({ admin: true });
 });
 app.post('/api/logout', (req, res) => {
-  res.set('Set-Cookie', 'admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');
+  const secureFlag = COOKIE_SECURE ? '; Secure' : '';
+  res.set('Set-Cookie', `admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureFlag}`);
   res.json({ admin: false });
 });
 
@@ -121,4 +148,7 @@ app.delete('/api/apps/:id', requireAdmin, (req, res) => {
 });
 
 app.get('/healthz', (req, res) => res.send('ok'));
-app.listen(PORT, () => console.log(`${FACTORY_NAME} portal listening on :${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`${FACTORY_NAME} portal listening on :${PORT}`));
+}
+module.exports = app;
