@@ -1,0 +1,12 @@
+services:
+  portal:
+    build: .
+    container_name: factory-portal
+    restart: unless-stopped        # comes back after crashes and server reboots
+    env_file: .env
+    ports:
+      - "80:3000"                  # http://portal works with no port number
+    volumes:
+      - portal-data:/data          # keeps the app list across rebuilds
+volumes:
+  portal-data:

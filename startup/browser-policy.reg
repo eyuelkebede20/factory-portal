@@ -1,0 +1,13 @@
+Windows Registry Editor Version 5.00
+; Sets the portal as Home page and shows the Home button in Edge and Chrome.
+; Change http://portal below if your address is different. Import once per PC, or push via GPO.
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge]
+"HomepageLocation"="http://portal"
+"HomepageIsNewTabPage"=dword:00000000
+"ShowHomeButton"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome]
+"HomepageLocation"="http://portal"
+"HomepageIsNewTabPage"=dword:00000000
+"ShowHomeButton"=dword:00000001
