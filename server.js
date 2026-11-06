@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { ADMIN_PASSWORD, SESSION_SECRET } = process.env;
-const FACTORY_NAME = process.env.FACTORY_NAME || 'Factory Portal';
+const FACTORY_NAME = process.env.FACTORY_NAME || 'Homicho Ammunition Engineering Industry';
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'apps.json');

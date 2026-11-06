@@ -1,4 +1,4 @@
-# Factory Portal
+# Homicho Ammunition Engineering Industry Portal
 
 A single internal web page that lists every company app (intranet, clinic, HR, etc.) as clickable links, so staff never need to remember IP addresses. The page opens automatically on each PC at login (once per day). An admin can log in with a password from `.env` and add, edit or delete apps; changes appear on every computer.
 

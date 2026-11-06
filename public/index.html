@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="/icon.png">
-<title>Factory Portal</title>
+<title>Homicho Ammunition Engineering Industry</title>
 <style>
 :root {
   --bg-dark: #070e1c;
@@ -21,7 +21,6 @@
   --brand-blue-hover: #2563eb;
   --brand-glow: rgba(59, 130, 246, 0.25);
   --accent-green: #10b981;
-  --danger: #ef4444;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
@@ -93,7 +92,6 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  flex-wrap: wrap;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border-glass);
 }
@@ -166,14 +164,8 @@ header {
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 /* Button Styles */
-button {
+button, .btn {
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 600;
@@ -186,6 +178,7 @@ button {
   transition: all 0.2s ease;
   border: 1px solid transparent;
   outline: none;
+  text-decoration: none;
 }
 button:focus-visible {
   outline: 2px solid var(--brand-blue);
@@ -199,36 +192,6 @@ button:focus-visible {
 .btn-primary:hover {
   background: var(--brand-blue-hover);
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
-}
-.btn-glass {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-main);
-  border: 1px solid var(--border-glass);
-  backdrop-filter: blur(8px);
-}
-.btn-glass:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-.btn-danger {
-  background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.22);
-  border-color: rgba(239, 68, 68, 0.5);
-}
-.btn-icon-sm {
-  padding: 6px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-glass);
-  color: var(--text-muted);
-}
-.btn-icon-sm:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
 }
 
 /* Hero Search Area */
@@ -537,13 +500,7 @@ button:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 190px;
-}
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
+  max-width: 240px;
 }
 
 /* Empty State */
@@ -560,99 +517,88 @@ button:focus-visible {
   font-size: 1rem;
 }
 
-/* Dialogs */
-dialog {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+/* Startup Confirmation Popup Modal */
+.startup-dialog {
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-lg);
-  background: rgba(13, 23, 42, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(10, 19, 36, 0.95);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   color: #fff;
-  padding: 28px;
-  width: min(480px, 94vw);
+  padding: 0;
+  width: min(460px, 92vw);
   margin: auto;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
-dialog::backdrop {
-  background: rgba(4, 9, 20, 0.75);
-  backdrop-filter: blur(6px);
+.startup-dialog::backdrop {
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(8px);
 }
-dialog h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 18px;
-  color: #fff;
+.startup-card {
+  padding: 36px 32px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  position: relative;
+}
+.startup-glow {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+.startup-logo-wrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(59, 130, 246, 0.35);
+  position: relative;
+  z-index: 1;
 }
-.form-group {
-  margin-bottom: 14px;
-}
-.form-group label {
-  display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-.form-group input {
+.startup-logo-wrap img {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  height: 100%;
+  object-fit: contain;
+}
+.startup-title {
+  font-size: 1.45rem;
+  font-weight: 700;
   color: #fff;
-  font-family: inherit;
-  font-size: 0.92rem;
-  outline: none;
-  transition: all 0.2s;
-}
-.form-group input:focus {
-  border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px var(--brand-glow);
-  background: rgba(255, 255, 255, 0.08);
-}
-.form-helper {
-  font-size: 0.74rem;
-  color: var(--text-dim);
+  letter-spacing: -0.01em;
   margin-top: 4px;
 }
-.form-error {
-  color: #f87171;
-  font-size: 0.84rem;
-  min-height: 1.2em;
-  margin: 10px 0;
+.startup-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 380px;
 }
-.dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-/* Live Card Preview Inside Modal */
-.preview-wrap {
-  margin: 14px 0 6px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-}
-.preview-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-  font-weight: 700;
+.startup-btn {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 0.98rem;
+  border-radius: var(--radius-sm);
+  justify-content: center;
+  margin-top: 6px;
 }
 
 @media (max-width: 640px) {
   .brand-group { width: 100%; }
-  .header-actions { width: 100%; justify-content: flex-end; }
   .search-box { padding: 10px 14px; }
+  .startup-card { padding: 28px 20px 24px; }
 }
 </style>
 </head>
@@ -672,36 +618,21 @@ dialog h3 {
 
 <div class="page-container">
 
-  <!-- Header -->
+  <!-- Header: Pure branding without admin or logout buttons -->
   <header>
     <div class="brand-group">
-      <div class="brand-logo-wrap" title="Factory Portal">
+      <div class="brand-logo-wrap" title="Homicho Ammunition Engineering Industry">
         <img src="/logo.png" alt="Portal Logo" id="brandLogo" onerror="this.src='/icon.png';">
       </div>
       <div class="brand-titles">
         <h1>
-          <span id="factory">Factory Portal</span>
+          <span id="factory">Homicho Ammunition Engineering Industry</span>
           <span class="status-pill">
             <span class="status-dot"></span> Online
           </span>
         </h1>
         <p id="portalSub">Internal Directory & Unified Applications Portal</p>
       </div>
-    </div>
-
-    <div class="header-actions" id="adminHeaderActions" hidden>
-      <button id="add" class="btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Add App
-      </button>
-      <a href="/admin" class="btn-glass" title="Admin Console" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        <span>Admin</span>
-      </a>
-      <button id="logoutBtn" class="btn-glass" title="Log out">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        <span>Log Out</span>
-      </button>
     </div>
   </header>
 
@@ -737,52 +668,30 @@ dialog h3 {
 
 </div>
 
-<!-- Add / Edit App Dialog -->
-<dialog id="edit">
-  <form method="dialog" id="editForm">
-    <h3 id="editTitle">Add Application</h3>
-    <div class="form-group">
-      <label for="f-name">App Name *</label>
-      <input id="f-name" maxlength="60" placeholder="e.g. Clinic ERP, Intranet, SCADA" required>
+<!-- Startup Confirmation Popup Modal -->
+<dialog id="startupDialog" class="startup-dialog">
+  <div class="startup-card">
+    <div class="startup-glow"></div>
+    <div class="startup-logo-wrap">
+      <img src="/logo.png" alt="Logo" onerror="this.src='/icon.png';">
     </div>
-    <div class="form-group">
-      <label for="f-url">Network Address (URL) *</label>
-      <input id="f-url" placeholder="http://192.168.20.10:8080 or https://..." required>
-    </div>
-    <div class="form-group">
-      <label for="f-cat">Category</label>
-      <input id="f-cat" list="cats" maxlength="40" placeholder="e.g. Health, Company, Production, IT">
-      <datalist id="cats"></datalist>
-    </div>
-    <div class="form-group">
-      <label for="f-icon">Icon / Image URL (optional)</label>
-      <input id="f-icon" maxlength="500" placeholder="e.g. /logo.png, /icon.png, or image URL">
-      <p class="form-helper">Leave empty to auto-generate a vibrant monogram visual.</p>
-    </div>
-    <div class="form-group">
-      <label for="f-desc">Description (optional)</label>
-      <input id="f-desc" maxlength="120" placeholder="Brief explanation of the service">
-    </div>
-
-    <!-- Live Card Preview -->
-    <div class="preview-wrap">
-      <div class="preview-label">Live Preview</div>
-      <div id="modalPreview"></div>
-    </div>
-
-    <p class="form-error" id="editErr"></p>
-    <div class="dialog-actions">
-      <button type="button" class="btn-glass" data-close>Cancel</button>
-      <button class="btn-primary" id="saveBtn">Save Application</button>
-    </div>
-  </form>
+    <span class="status-pill">
+      <span class="status-dot"></span> System Operational
+    </span>
+    <h2 class="startup-title">Workstation Startup Confirmed</h2>
+    <p class="startup-desc">
+      Portal has opened for this session. All company applications, internal network directory, clinic records, and tools are online.
+    </p>
+    <button id="confirmStartupBtn" class="btn-primary startup-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      Confirm & Continue
+    </button>
+  </div>
 </dialog>
 
 <script>
 const $ = (s) => document.querySelector(s);
 let apps = [];
-let admin = false;
-let editingId = null;
 let activeCategory = 'ALL';
 
 // Theme generator: deterministic gradients and colors based on string
@@ -819,15 +728,13 @@ async function api(path, opts = {}) {
 }
 
 // Create Card Element
-function createCard(a, isPreview = false) {
-  const [c1, c2, accent] = getPalette(a.category + ':' + a.name);
-  const card = document.createElement(isPreview ? 'div' : 'a');
+function createCard(a) {
+  const [c1, c2] = getPalette(a.category + ':' + a.name);
+  const card = document.createElement('a');
   card.className = 'app-card';
-  if (!isPreview) {
-    card.href = a.url || '#';
-    card.target = '_blank';
-    card.rel = 'noopener noreferrer';
-  }
+  card.href = a.url || '#';
+  card.target = '_blank';
+  card.rel = 'noopener noreferrer';
   card.style.setProperty('--card-c1', c1);
   card.style.setProperty('--card-c2', c2);
 
@@ -851,7 +758,6 @@ function createCard(a, isPreview = false) {
     img.className = 'card-icon-img';
     img.src = a.icon;
     img.alt = a.name;
-    // Graceful fallback to alt visual monogram if image fails to load
     img.onerror = () => {
       img.remove();
       const alt = document.createElement('div');
@@ -898,44 +804,6 @@ function createCard(a, isPreview = false) {
   urlChip.className = 'card-url-chip';
   urlChip.textContent = (a.url || '').replace(/^https?:\/\//i, '');
   footer.appendChild(urlChip);
-
-  if (admin && !isPreview) {
-    const actions = document.createElement('div');
-    actions.className = 'card-actions';
-
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'btn-icon-sm';
-    editBtn.title = 'Edit app';
-    editBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-    editBtn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openEdit(a);
-    };
-
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'btn-icon-sm btn-danger';
-    delBtn.title = 'Delete app';
-    delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
-    delBtn.onclick = async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (confirm(`Delete "${a.name}" from the portal for all computers?`)) {
-        try {
-          await api('apps/' + a.id, { method: 'DELETE' });
-          await refresh();
-        } catch (err) {
-          alert(err.message);
-          if (err.message.includes('Admin login required')) setAdmin(false);
-        }
-      }
-    };
-
-    actions.append(editBtn, delBtn);
-    footer.appendChild(actions);
-  }
 
   body.appendChild(footer);
   card.appendChild(body);
@@ -987,7 +855,7 @@ function render() {
   const empty = $('#empty');
   const emptyText = $('#emptyText');
   if (apps.length === 0) {
-    emptyText.textContent = admin ? 'No apps added yet. Click "Add App" above to create one.' : 'No apps available.';
+    emptyText.textContent = 'No applications available.';
     empty.hidden = false;
   } else if (filtered.length === 0) {
     emptyText.textContent = 'No applications match your search or filter.';
@@ -998,13 +866,6 @@ function render() {
 
   // Update categories filter pills
   renderPills();
-
-  // Datalist options
-  $('#cats').replaceChildren(...[...new Set(apps.map((a) => a.category))].filter(Boolean).map((c) => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    return opt;
-  }));
 }
 
 function renderPills() {
@@ -1027,49 +888,6 @@ async function refresh() {
   render();
 }
 
-function setAdmin(v) {
-  admin = v;
-  const adminBar = $('#adminHeaderActions');
-  if (adminBar) adminBar.hidden = !v;
-  render();
-}
-
-// Live preview inside Add / Edit Dialog
-function updateModalPreview() {
-  const preview = $('#modalPreview');
-  preview.replaceChildren(createCard({
-    name: $('#f-name').value.trim() || 'Sample Application',
-    url: $('#f-url').value.trim() || 'http://192.168.20.10:8080',
-    category: $('#f-cat').value.trim() || 'General',
-    description: $('#f-desc').value.trim() || 'Short description will appear here.',
-    icon: $('#f-icon').value.trim()
-  }, true));
-}
-
-function openEdit(a) {
-  editingId = a ? a.id : null;
-  $('#editTitle').textContent = a ? 'Edit Application' : 'Add Application';
-  $('#saveBtn').textContent = a ? 'Update Application' : 'Add Application';
-  $('#f-name').value = a?.name || '';
-  $('#f-url').value = a?.url || '';
-  $('#f-cat').value = a?.category || '';
-  $('#f-icon').value = a?.icon || '';
-  $('#f-desc').value = a?.description || '';
-  $('#editErr').textContent = '';
-  updateModalPreview();
-  $('#edit').showModal();
-}
-
-// Dialog listeners
-document.querySelectorAll('[data-close]').forEach((b) => (b.onclick = () => b.closest('dialog').close()));
-document.querySelectorAll('dialog').forEach((d) => {
-  d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
-});
-
-['f-name', 'f-url', 'f-cat', 'f-icon', 'f-desc'].forEach((id) => {
-  $('#' + id).addEventListener('input', updateModalPreview);
-});
-
 // Search input handling
 $('#q').addEventListener('input', render);
 $('#clearSearch').addEventListener('click', () => {
@@ -1091,43 +909,35 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Admin actions
-const addBtn = $('#add');
-if (addBtn) addBtn.onclick = () => openEdit(null);
+// Startup confirmation popup logic
+function checkStartupPopup() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasStartupParam = urlParams.has('startup');
+  const alreadyConfirmedInSession = sessionStorage.getItem('portal_startup_confirmed') === 'true';
 
-const logoutBtn = $('#logoutBtn');
-if (logoutBtn) {
-  logoutBtn.onclick = async () => {
-    await api('logout', { method: 'POST' });
-    setAdmin(false);
-  };
-}
+  // Trigger popup if ?startup parameter is present OR if opening in a fresh browser session
+  if (hasStartupParam || !alreadyConfirmedInSession) {
+    const dialog = $('#startupDialog');
+    if (dialog && typeof dialog.showModal === 'function') {
+      try {
+        dialog.showModal();
+        $('#confirmStartupBtn').focus();
+      } catch (err) {
+        // In case showModal fails or is already open
+      }
 
-$('#editForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const btn = $('#saveBtn');
-  btn.disabled = true;
-  const body = JSON.stringify({
-    name: $('#f-name').value,
-    url: $('#f-url').value,
-    category: $('#f-cat').value,
-    icon: $('#f-icon').value,
-    description: $('#f-desc').value
-  });
-  try {
-    await api(editingId ? 'apps/' + editingId : 'apps', {
-      method: editingId ? 'PUT' : 'POST',
-      body
-    });
-    $('#edit').close();
-    await refresh();
-  } catch (err) {
-    $('#editErr').textContent = err.message;
-    if (err.message.includes('Admin login required')) setAdmin(false);
-  } finally {
-    btn.disabled = false;
+      $('#confirmStartupBtn').onclick = () => {
+        sessionStorage.setItem('portal_startup_confirmed', 'true');
+        dialog.close();
+        // Clean ?startup query parameter from the address bar smoothly without page reload
+        if (window.history.replaceState) {
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      };
+    }
   }
-};
+}
 
 // Initial bootstrap
 (async () => {
@@ -1136,10 +946,12 @@ $('#editForm').onsubmit = async (e) => {
     $('#factory').textContent = s.factory;
     document.title = s.factory;
     apps = data.apps;
-    setAdmin(s.admin);
+    render();
+    checkStartupPopup();
   } catch (err) {
     $('#emptyText').textContent = 'Unable to connect to portal server. Retrying...';
     $('#empty').hidden = false;
+    checkStartupPopup();
   }
 })();
 
