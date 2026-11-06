@@ -132,12 +132,16 @@ test('admin authentication and CRUD workflow', async () => {
     name: 'Production Line 1',
     url: 'http://192.168.1.50:8000',
     category: 'Production',
-    description: 'Line 1 real-time telemetry'
+    description: 'Line 1 real-time telemetry',
+    alt: 'PL1',
+    icon: '/line1.png'
   }));
   assert.equal(res.status, 201);
   assert.ok(res.json.id);
   assert.equal(res.json.name, 'Production Line 1');
   assert.equal(res.json.category, 'Production');
+  assert.equal(res.json.alt, 'PL1');
+  assert.equal(res.json.icon, '/line1.png');
   const appId = res.json.id;
 
   // 6. Verify app in list
@@ -146,6 +150,7 @@ test('admin authentication and CRUD workflow', async () => {
   const found = res.json.apps.find(a => a.id === appId);
   assert.ok(found);
   assert.equal(found.url, 'http://192.168.1.50:8000');
+  assert.equal(found.alt, 'PL1');
 
   // 7. Input validation: missing name
   res = await request('POST', '/api/apps', { Cookie: cookie }, JSON.stringify({
@@ -230,6 +235,94 @@ test('startup confirmation captures workstation and requires admin to view', asy
 
   // Cleanup logout
   await request('POST', '/api/logout', { Cookie: cookie });
+});
+
+test('system update endpoints require admin authentication', async () => {
+  // 1. Unauthenticated attempts fail
+  let res = await request('POST', '/api/system/update');
+  assert.equal(res.status, 401);
+
+  res = await request('GET', '/api/system/update-status');
+  assert.equal(res.status, 401);
+
+  // 2. Login as admin
+  res = await request('POST', '/api/login', {}, JSON.stringify({ password: 'test-admin-password' }));
+  const cookie = res.headers['set-cookie'][0].split(';')[0];
+
+  // 3. Status check when idle
+  res = await request('GET', '/api/system/update-status', { Cookie: cookie });
+  assert.equal(res.status, 200);
+  assert.ok(Array.isArray(res.json.lines));
+
+  // Cleanup logout
+  await request('POST', '/api/logout', { Cookie: cookie });
+});
+
+test('settings endpoint returns settings and effective redirect url', async () => {
+  const res = await request('GET', '/api/settings');
+  assert.equal(res.status, 200);
+  assert.equal(typeof res.json.redirectOnConfirm, 'boolean');
+  assert.equal(typeof res.json.downloadOnConfirm, 'boolean');
+  assert.equal(typeof res.json.redirectDelay, 'number');
+  assert.equal(res.json.factory, 'Automated Test Factory');
+  assert.ok(res.json.effectiveRedirectUrl);
+});
+
+test('settings update requires admin and persists changes', async () => {
+  // 1. Unauthenticated fails
+  let res = await request('PUT', '/api/settings', {}, JSON.stringify({
+    redirectOnConfirm: false,
+    redirectUrl: 'http://192.168.1.99:5000'
+  }));
+  assert.equal(res.status, 401);
+
+  // 2. Login as admin
+  res = await request('POST', '/api/login', {}, JSON.stringify({ password: 'test-admin-password' }));
+  const cookie = res.headers['set-cookie'][0].split(';')[0];
+
+  // 3. Save settings as admin
+  res = await request('PUT', '/api/settings', { Cookie: cookie }, JSON.stringify({
+    redirectOnConfirm: false,
+    redirectUrl: 'http://192.168.1.99:5000',
+    redirectAppName: 'Clinic Telemetry',
+    downloadOnConfirm: true,
+    downloadUrl: '/api/download/setup-pc',
+    redirectDelay: 3.0
+  }));
+  assert.equal(res.status, 200);
+  assert.equal(res.json.redirectOnConfirm, false);
+  assert.equal(res.json.redirectUrl, 'http://192.168.1.99:5000');
+  assert.equal(res.json.redirectAppName, 'Clinic Telemetry');
+  assert.equal(res.json.downloadOnConfirm, true);
+  assert.equal(res.json.redirectDelay, 3.0);
+
+  // 4. Verify public GET /api/settings reflects changes
+  res = await request('GET', '/api/settings');
+  assert.equal(res.status, 200);
+  assert.equal(res.json.redirectOnConfirm, false);
+  assert.equal(res.json.redirectUrl, 'http://192.168.1.99:5000');
+  assert.equal(res.json.effectiveRedirectUrl, 'http://192.168.1.99:5000');
+  assert.equal(res.json.effectiveAppName, 'Clinic Telemetry');
+
+  // Cleanup logout
+  await request('POST', '/api/logout', { Cookie: cookie });
+});
+
+test('workstation setup script download endpoint serves batch script with embedded portal url', async () => {
+  // 1. Download via /api/download/setup-pc
+  let res = await request('GET', '/api/download/setup-pc');
+  assert.equal(res.status, 200);
+  assert.ok(res.headers['content-type'].includes('application/x-bat'));
+  assert.ok(res.headers['content-disposition'].includes('setup-workstation.bat'));
+  assert.ok(res.data.includes('@echo off'));
+  assert.ok(res.data.includes('open-portal.ps1'));
+  assert.ok(res.data.includes('Factory Portal.lnk'));
+
+  // 2. Download via short alias /setup.bat
+  res = await request('GET', '/setup.bat');
+  assert.equal(res.status, 200);
+  assert.ok(res.headers['content-type'].includes('application/x-bat'));
+  assert.ok(res.data.includes('@echo off'));
 });
 
 test('tampered cookie is rejected', async () => {

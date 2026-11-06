@@ -606,6 +606,61 @@ button:focus-visible {
   padding: 4px 12px;
   border-radius: 6px;
 }
+.startup-target-banner {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.target-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--brand-blue);
+  text-transform: uppercase;
+}
+.target-title {
+  font-size: 0.95rem;
+  color: #fff;
+}
+.target-url {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: var(--text-dim);
+}
+.startup-actions-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.startup-btn-secondary {
+  width: 100%;
+  justify-content: center;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  color: var(--text-muted);
+}
+.startup-setup-link-wrap {
+  margin-top: 4px;
+}
+.startup-setup-link {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.startup-setup-link:hover {
+  color: var(--brand-blue);
+}
 
 @media (max-width: 640px) {
   .brand-group { width: 100%; }
@@ -692,13 +747,35 @@ button:focus-visible {
     </span>
     <h2 class="startup-title">Workstation Startup Confirmed</h2>
     <div class="startup-workstation-info" id="workstationInfo" hidden></div>
-    <p class="startup-desc">
-      Portal has opened for this session. All company applications, internal network directory, clinic records, and tools are online.
+    <p class="startup-desc" id="startupModalDesc">
+      Portal has opened for this workstation session. All internal company applications and services are ready.
     </p>
-    <button id="confirmStartupBtn" class="btn-primary startup-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      Confirm & Continue
-    </button>
+
+    <!-- Dynamic Redirect Target Card if configured -->
+    <div id="startupTargetBanner" class="startup-target-banner" style="display: none;">
+      <span class="target-label">PRIMARY APPLICATION READY</span>
+      <strong id="startupTargetTitle" class="target-title">Intranet</strong>
+      <span id="startupTargetUrl" class="target-url">http://...</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="startup-actions-group">
+      <button id="confirmStartupBtn" class="btn-primary startup-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="confirmBtnLabel">Confirm & Continue</span>
+      </button>
+      <button id="stayPortalBtn" type="button" class="btn-glass startup-btn-secondary" style="display: none;">
+        Browse All Applications Instead
+      </button>
+    </div>
+
+    <!-- Setup Script Download Link -->
+    <div class="startup-setup-link-wrap">
+      <a href="/api/download/setup-pc" class="startup-setup-link" title="Download setup script for other factory computers">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download Auto-Startup Setup Script (.bat)
+      </a>
+    </div>
   </div>
 </dialog>
 
@@ -765,24 +842,25 @@ function createCard(a) {
   banner.appendChild(catBadge);
 
   const hasIcon = Boolean(a.icon && a.icon.trim());
+  const altText = (a.alt && a.alt.trim()) || getMonogram(a.name);
 
   if (hasIcon) {
     const img = document.createElement('img');
     img.className = 'card-icon-img';
     img.src = a.icon;
-    img.alt = a.name;
+    img.alt = a.alt || a.name || 'App Icon';
     img.onerror = () => {
       img.remove();
       const alt = document.createElement('div');
       alt.className = 'card-alt-visual';
-      alt.textContent = getMonogram(a.name);
+      alt.textContent = altText;
       banner.appendChild(alt);
     };
     banner.appendChild(img);
   } else {
     const alt = document.createElement('div');
     alt.className = 'card-alt-visual';
-    alt.textContent = getMonogram(a.name);
+    alt.textContent = altText;
     banner.appendChild(alt);
   }
   card.appendChild(banner);
@@ -923,7 +1001,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Startup confirmation popup logic
-function checkStartupPopup() {
+async function checkStartupPopup() {
   const urlParams = new URLSearchParams(window.location.search);
   const hasStartupParam = urlParams.has('startup');
   const host = urlParams.get('host') || '';
@@ -939,6 +1017,26 @@ function checkStartupPopup() {
       info.hidden = false;
     }
 
+    const settings = await api('settings').catch(() => ({}));
+    const targetUrl = settings.effectiveRedirectUrl || (apps[0] ? apps[0].url : '');
+    const targetName = settings.effectiveAppName || (apps[0] ? apps[0].name : 'Primary Application');
+    const shouldRedirect = settings.redirectOnConfirm && Boolean(targetUrl);
+    const shouldDownload = settings.downloadOnConfirm && Boolean(settings.downloadUrl);
+
+    if (shouldRedirect) {
+      const banner = $('#startupTargetBanner');
+      if (banner) {
+        $('#startupTargetTitle').textContent = targetName;
+        $('#startupTargetUrl').textContent = targetUrl;
+        banner.style.display = 'flex';
+      }
+      $('#confirmBtnLabel').textContent = `Confirm & Launch ${targetName} ↗`;
+      $('#stayPortalBtn').style.display = 'flex';
+    } else {
+      $('#confirmBtnLabel').textContent = 'Confirm & Continue';
+      $('#stayPortalBtn').style.display = 'none';
+    }
+
     if (dialog && typeof dialog.showModal === 'function') {
       try {
         dialog.showModal();
@@ -947,11 +1045,11 @@ function checkStartupPopup() {
         // In case showModal fails or is already open
       }
 
-      $('#confirmStartupBtn').onclick = async () => {
+      const finalizeConfirmation = async (doRedirect) => {
         const btn = $('#confirmStartupBtn');
         btn.disabled = true;
-        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Capturing Confirmation...`;
 
+        // 1. Capture confirmation on backend
         try {
           await api('confirm-startup', {
             method: 'POST',
@@ -962,13 +1060,35 @@ function checkStartupPopup() {
         }
 
         sessionStorage.setItem('portal_startup_confirmed', 'true');
-        dialog.close();
 
-        // Clean ?startup query parameter from the address bar smoothly without page reload
-        if (window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
+        // 2. Trigger download if enabled
+        if (shouldDownload && settings.downloadUrl) {
+          try {
+            const dl = document.createElement('a');
+            dl.href = settings.downloadUrl;
+            dl.download = '';
+            document.body.appendChild(dl);
+            dl.click();
+            dl.remove();
+          } catch (e) {}
+        }
+
+        // 3. Trigger redirect if requested
+        if (doRedirect && shouldRedirect && targetUrl) {
+          btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirmed ✓ Opening ${targetName}...`;
+          setTimeout(() => {
+            window.location.href = targetUrl;
+          }, (settings.redirectDelay || 1.5) * 1000);
+        } else {
+          dialog.close();
+          if (window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
         }
       };
+
+      $('#confirmStartupBtn').onclick = () => finalizeConfirmation(true);
+      $('#stayPortalBtn').onclick = () => finalizeConfirmation(false);
     }
   }
 }

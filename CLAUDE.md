@@ -36,12 +36,21 @@ Changing `.env` needs `docker compose up -d` (recreate) to take effect.
 | GET | `/api/session` | public | `{admin, factory}` |
 | POST | `/api/login` | public | Body `{password}`; sets HttpOnly cookie (8 hours) |
 | POST | `/api/logout` | public | Clears cookie |
-| POST | `/api/apps` | admin | Add app `{name, url, category, description, icon}` |
+| POST | `/api/apps` | admin | Add app `{name, url, category, description, icon, alt}` |
 | PUT | `/api/apps/:id` | admin | Edit app |
 | DELETE | `/api/apps/:id` | admin | Delete app |
+| POST | `/api/confirm-startup` | public | Logs workstation startup confirmation `{host, user}` |
+| GET | `/api/confirmations` | admin | List workstation startup confirmations |
+| GET | `/api/settings` | public | Get startup redirection and download settings |
+| PUT | `/api/settings` | admin | Update startup redirection and download settings |
+| GET | `/api/download/setup-pc` | public | Download 1-click Windows workstation startup installer (.bat) |
+| GET | `/setup.bat` | public | Short alias to download setup script |
+| POST | `/api/system/update` | admin | Trigger git pull, docker rebuild and container restart |
+| GET | `/api/system/update-status` | admin | Live terminal log output of running system update |
+| GET | `/admin` | admin | Administrator dashboard UI |
 | GET | `/healthz` | public | Health check |
 
-App record: `{ id, name (<=60), url (http/https only, <=300), category (<=40, default "General"), description (<=120, optional), icon (<=500, optional) }`.
+App record: `{ id, name (<=60), url (http/https only, <=300), category (<=40, default "General"), description (<=120, optional), icon (optional), alt (<=30, optional display card alt/monogram) }`.
 
 ## Deploy (Docker server)
 ```bash
